@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Baby Tracker</string>
+
+    <!-- Navigation -->
+    <string name="nav_today">Hoy</string>
+    <string name="nav_statistics">Estadísticas</string>
+    <string name="nav_settings">Ajustes</string>
+
+    <!-- Actions -->
+    <string name="action_sign_in">Iniciar sesión</string>
+    <string name="action_have_code">Tengo un código</string>
+    <string name="action_continue">Continuar</string>
+    <string name="action_back">Atrás</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_sign_out">Cerrar sesión</string>
+    <string name="action_show_password">Mostrar contraseña</string>
+    <string name="action_hide_password">Ocultar contraseña</string>
+
+    <!-- Form fields -->
+    <string name="field_server">Dirección del servidor</string>
+    <string name="field_email">Correo electrónico</string>
+    <string name="field_password">Contraseña</string>
+    <string name="field_code">Código</string>
+    <string name="field_display_name">Tu nombre</string>
+
+    <!-- Sign in -->
+    <string name="login_title">Iniciar sesión</string>
+    <string name="login_subtitle">Usa la cuenta del servidor privado de tu familia.</string>
+    <string name="login_session_expired">Tu sesión ha caducado. Inicia sesión de nuevo para mantener tus dispositivos sincronizados. No se ha perdido nada de lo que registraste.</string>
+
+    <!-- Code -->
+    <string name="redeem_title">Usar un código</string>
+    <string name="redeem_intro">Escribe el código que te han dado y elige tu contraseña.</string>
+    <string name="redeem_joining_switch">Me ha invitado el otro progenitor</string>
+    <string name="redeem_joining_help">Actívalo si el código viene de una invitación creada en la aplicación.</string>
+    <plurals name="redeem_password_help">
+        <item quantity="one">Al menos %1$d carácter.</item>
+        <item quantity="many">Al menos %1$d de caracteres.</item>
+        <item quantity="other">Al menos %1$d caracteres.</item>
+    </plurals>
+
+    <!-- Field errors -->
+    <string name="error_required">Obligatorio</string>
+    <string name="error_server_invalid">Esta dirección no es válida</string>
+    <string name="error_server_insecure">La dirección debe empezar por https://</string>
+    <string name="error_email_invalid">Este correo no es válido</string>
+    <string name="error_password_short">La contraseña es demasiado corta</string>
+
+    <!-- Request errors -->
+    <string name="error_network">No se pudo conectar con el servidor. Comprueba tu conexión y la dirección del servidor.</string>
+    <string name="error_invalid_credentials">El correo o la contraseña no son correctos.</string>
+    <string name="error_rate_limited">Demasiados intentos. Espera un minuto y vuelve a intentarlo.</string>
+    <string name="error_invite_expired">Este código no es válido. Puede que haya caducado o que ya se haya usado.</string>
+    <string name="error_email_taken">Ya existe una cuenta con este correo.</string>
+    <string name="error_validation">Algunos datos no son válidos. Revísalos y vuelve a intentarlo.</string>
+    <string name="error_unexpected">Algo ha salido mal. Vuelve a intentarlo en un momento.</string>
+
+    <!-- Today -->
+    <string name="today_empty_title">Hoy no hay nada registrado</string>
+    <string name="today_empty_body">Aquí aparecerán los biberones, los pañales y el sueño.</string>
+
+    <!-- Statistics -->
+    <string name="stats_empty_title">Todavía no hay datos suficientes</string>
+    <string name="stats_empty_body">Las estadísticas aparecen tras unos días de registros.</string>
+
+    <!-- Settings -->
+    <string name="settings_language">Idioma</string>
+    <string name="language_system">Predeterminado del sistema</string>
+    <string name="settings_account">Cuenta</string>
+    <string name="settings_account_family">Familia</string>
+    <string name="settings_account_server">Servidor</string>
+    <string name="sign_out_confirm_title">¿Cerrar sesión?</string>
+    <string name="sign_out_confirm_body">Se borrarán los datos guardados en este teléfono. Todo lo que ya esté sincronizado sigue en el servidor.</string>
+</resources>

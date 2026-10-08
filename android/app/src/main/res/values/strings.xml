@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Baby Tracker</string>
+
+    <!-- Navigation -->
+    <string name="nav_today">Today</string>
+    <string name="nav_statistics">Statistics</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Actions -->
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_have_code">I have a code</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_sign_out">Sign out</string>
+    <string name="action_show_password">Show password</string>
+    <string name="action_hide_password">Hide password</string>
+
+    <!-- Form fields -->
+    <string name="field_server">Server address</string>
+    <string name="field_server_placeholder" translatable="false">baby.example.com</string>
+    <string name="field_email">E-mail</string>
+    <string name="field_password">Password</string>
+    <string name="field_code">Code</string>
+    <string name="field_display_name">Your name</string>
+
+    <!-- Sign in -->
+    <string name="login_title">Sign in</string>
+    <string name="login_subtitle">Use the account of your family\'s private server.</string>
+    <string name="login_session_expired">Your session has expired. Sign in again to keep your devices in sync. Nothing you recorded has been lost.</string>
+
+    <!-- Code -->
+    <string name="redeem_title">Use a code</string>
+    <string name="redeem_intro">Enter the code you were given and choose your password.</string>
+    <string name="redeem_joining_switch">I was invited by the other parent</string>
+    <string name="redeem_joining_help">Turn this on if the code comes from an invitation created in the app.</string>
+    <plurals name="redeem_password_help">
+        <item quantity="one">At least %1$d character.</item>
+        <item quantity="other">At least %1$d characters.</item>
+    </plurals>
+
+    <!-- Field errors -->
+    <string name="error_required">Required</string>
+    <string name="error_server_invalid">This is not a valid address</string>
+    <string name="error_server_insecure">The address must start with https://</string>
+    <string name="error_email_invalid">This is not a valid e-mail</string>
+    <string name="error_password_short">The password is too short</string>
+
+    <!-- Request errors -->
+    <string name="error_network">Could not reach the server. Check your connection and the server address.</string>
+    <string name="error_invalid_credentials">The e-mail or the password is not correct.</string>
+    <string name="error_rate_limited">Too many attempts. Wait a minute and try again.</string>
+    <string name="error_invite_expired">This code is not valid. It may have expired or already been used.</string>
+    <string name="error_email_taken">There is already an account with this e-mail.</string>
+    <string name="error_validation">Some of the information is not valid. Check it and try again.</string>
+    <string name="error_unexpected">Something went wrong. Try again in a moment.</string>
+
+    <!-- Today -->
+    <string name="today_empty_title">Nothing recorded today</string>
+    <string name="today_empty_body">Bottles, diapers and sleep will appear here.</string>
+
+    <!-- Statistics -->
+    <string name="stats_empty_title">Not enough data yet</string>
+    <string name="stats_empty_body">Statistics appear after a few days of records.</string>
+
+    <!-- Settings -->
+    <string name="settings_language">Language</string>
+    <string name="language_system">System default</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_spanish" translatable="false">Español</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_account_family">Family</string>
+    <string name="settings_account_server">Server</string>
+    <string name="sign_out_confirm_title">Sign out?</string>
+    <string name="sign_out_confirm_body">The data stored on this phone will be removed. Everything already synchronized stays on the server.</string>
+</resources>

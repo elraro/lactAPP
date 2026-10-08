@@ -1,0 +1,26 @@
+# Deviations from detekt's defaults, each with its reason.
+naming:
+  FunctionNaming:
+    # Composable functions are PascalCase by convention.
+    ignoreAnnotated: ['Composable']
+complexity:
+  LongParameterList:
+    # Stateless composables take their state and callbacks as parameters;
+    # constructors list injected dependencies.
+    ignoreAnnotated: ['Composable']
+    constructorThreshold: 10
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    ignoreAnnotated: ['Dao']
+    thresholdInClasses: 15
+style:
+  MagicNumber:
+    ignoreAnnotated: ['Composable']
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+  ReturnCount:
+    # Early returns for validation and null checks are the house style.
+    active: false
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview']

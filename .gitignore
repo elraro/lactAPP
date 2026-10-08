@@ -44,3 +44,6 @@ android/.cxx/
 *.sql.gz
 deploy/data/
 pgdata/
+
+# Gradle wrapper jar is required to build
+!android/gradle/wrapper/gradle-wrapper.jar
