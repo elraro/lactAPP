@@ -201,10 +201,12 @@ have not been uploaded and will be lost").
 Overlap rule: two non-deleted sleep sessions of the same baby overlap if their
 intervals intersect; an open session counts as extending to "now".
 
-1. **On the device** — creating or editing a session that overlaps one the device
-   knows about is blocked with a dialog offering: end the open session at the new
-   start / edit the times / cancel. Pressing SLEEP while a session is open is not
-   possible (the button is WAKE).
+1. **On the device** — creating, editing or un-deleting a session that overlaps one
+   the device knows about is refused inside the write transaction; the editor shows
+   why and keeps the form open so the times can be changed. Sessions that touch
+   end-to-start do not overlap. Pressing SLEEP while a session is open is not
+   possible (the button is WAKE). *(Implemented, Phase 4. Offering to end the open
+   session automatically is a possible refinement.)*
 2. **On the server** — overlaps are **accepted**. Rejecting would throw away
    something a parent recorded while offline.
 3. **After sync** — the device detects overlaps among pulled rows, shows both in

@@ -10,9 +10,10 @@ app (Kotlin, Compose), a single Go REST server, and PostgreSQL. Parents record
 bottles, diapers, sleep and measurements; the system derives statistics and a
 next-nap estimate; an optional AI explains those results.
 
-**Current phase:** 3 complete (backend; Android sign-in, session, Room schema, navigation,
-language selector). Next: Phase 4 — core tracking. The app records nothing yet and does
-not sync; statistics, prediction and AI do not exist.
+**Current phase:** 4 complete (backend; Android sign-in and local tracking of bottles,
+diapers and sleep with timeline and editing). Next: Phase 5 — synchronization. Changes are
+queued in `pending_mutations` but **nothing is uploaded or downloaded yet**; statistics,
+prediction and AI do not exist.
 Update this line when a phase completes.
 
 ## 2. Source of truth
@@ -80,7 +81,7 @@ considered · errors handled and surfaced to the user · security implications c
 |---|---|
 | Server | `cd server && make check` — gofmt, `go vet`, `staticcheck`, `sqlc diff`, `go test -race`, build |
 | Server, after editing `internal/store/queries/*.sql` or a migration | `make generate` and commit the generated code |
-| Android | `cd android && ./gradlew ktlintCheck detekt lint test assembleDebug` (`ktlintFormat` fixes style). Needs `android/local.properties` with `sdk.dir=…` or `ANDROID_HOME`; compiles with a JDK 21 toolchain. |
+| Android | `cd android && ./gradlew ktlintCheck detekt lint test assembleDebug` (`ktlintFormat` fixes style). Needs `android/local.properties` with `sdk.dir=…` or `ANDROID_HOME`; the Gradle daemon is pinned to JDK 21 (`gradle/gradle-daemon-jvm.properties`; detekt fails on 25). |
 | Stack | `docker compose up -d` |
 
 Database tests need `BT_TEST_DATABASE_URL` pointing at a PostgreSQL 17 server on which
@@ -119,6 +120,15 @@ from a run with skips. Tools: `go install github.com/sqlc-dev/sqlc/cmd/sqlc@late
   ViewModel. Map `ApiError` to text with `ui/common/ErrorMessages.kt`.
 - Tests use the real data layer against MockWebServer and in-memory Room
   (`TestBackend` in `src/test`), not hand-written fakes of repositories.
+- Events are written only through `EventRepository` (validation, overlap check, queueing
+  in one transaction). Never call `EventDao.upsert` from elsewhere in app code.
+- Read the clock and zone through `TimeSource`, not `Instant.now()` / `ZoneId.systemDefault()`,
+  in anything that is tested. (`LocalDate.EPOCH` and other API 34+ `java.time` members are
+  not available: minSdk is 26, without desugaring.)
+- View-model tests: construct the view model *after* `Dispatchers.setMain`, and use
+  `runBlocking` with a timeout rather than `runTest` when Room flows or periodic `delay`s
+  are involved (see `TodayViewModelTest`). When waiting for state, wait for every field
+  you assert on — separate queries update separately.
 - Room schema changes need a version bump, a migration and the exported schema committed.
 - Lint and compiler warnings are errors. Fix the cause; a suppression needs a comment
   saying why (see `app/lint.xml`).

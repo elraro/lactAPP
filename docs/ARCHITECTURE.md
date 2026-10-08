@@ -1,7 +1,8 @@
 # Architecture
 
-> **Status: APPROVED 2026-10-08.** The server (Phase 2) and the Android foundation (Phase 3: sign-in, session,
-> local database, navigation, language) are implemented.
+> **Status: APPROVED 2026-10-08.** The server (Phase 2), the Android foundation (Phase 3) and local tracking
+> (Phase 4: bottles, diapers, sleep, timeline, editing — stored and queued on the
+> device, not yet uploaded) are implemented.
 > Section 10 records the decisions that were taken.
 
 ## 1. Guiding principle
@@ -129,18 +130,20 @@ Layering inside `app` (package by feature under `ui/`, shared `data/` and `domai
 
 ```
 ui/<feature>/      Screen composables + ViewModel (StateFlow<UiState>); ui/common for shared pieces
-domain/            Models, and use cases ONLY where there is real logic
-                   (StartSleep, EndSleep, SaveSleepSession overlap check, ClassifySleep)
+domain/            Pure Kotlin: Event and its validation, SleepRules (nap/night),
+                   Timeline (rows from events), Ids (UUIDv7), TimeSource (clock + zone)
 data/local/        Room entities, DAOs
 data/remote/       Retrofit API, DTOs, ApiResult, interceptors, token authenticator
 data/session/      SessionStore (DataStore) and the Keystore cipher for tokens
-data/repository/   AuthRepository; EventRepository and BabyRepository from Phase 4
+data/repository/   AuthRepository, EventRepository, BabyRepository, mutation building
 data/sync/         (Phase 5) SyncEngine, SyncWorker, mutation queue, rebase logic
 di/                Hilt modules
 ```
 
-A ViewModel calls a repository directly when the operation is plain CRUD. We do
-not create pass-through use cases.
+A ViewModel calls a repository directly. There are no use-case classes: the rules
+that need them (validation, sleep overlap, suggested sleep kind) are pure functions in
+`domain/` that `EventRepository` applies inside its write transaction, so no caller
+can skip them.
 
 ### Session and network
 
@@ -164,6 +167,20 @@ not create pass-through use cases.
    `pending_mutations`.
 2. Room Flow re-emits; the UI updates. This is the end of the user-visible action.
 3. Repository asks the sync engine to run "soon" (debounced unique work).
+
+### Tracking screen (Phase 4)
+
+- **Today** shows the latest feed, diaper and sleep state with one action each, then
+  the day's timeline, newest first, with a type filter and previous/next day.
+  A bottle or diaper is two taps (action, then amount or kind); sleep and wake are one.
+- The summary cards always describe *now*; only the timeline follows the day being browsed.
+- A sleep session is one row in the database and two rows in the timeline (fell asleep,
+  woke up), each on the day it happened.
+- Tapping a row opens the editor (time, details, notes, delete). Delete is undoable
+  from the snackbar.
+- The first run asks for the baby's name and date of birth.
+- Not built yet: measurement and note entry, editing the baby profile, a baby switcher.
+  Such events arriving from another device are listed but open no dedicated form.
 
 ### Sync triggers
 

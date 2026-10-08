@@ -18,8 +18,8 @@ No public registration, no social features, no ads, no analytics.
 | 1 | Architecture | done (approved 2026-10-08) |
 | 2 | Backend foundation | done |
 | 3 | Android foundation | done |
-| 4 | Core tracking | next |
-| 5 | Synchronization | not started |
+| 4 | Core tracking | done |
+| 5 | Synchronization | next |
 | 6 | Statistics | not started |
 | 7 | Sleep prediction | not started |
 | 8 | AI | not started |
