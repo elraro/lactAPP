@@ -70,7 +70,7 @@ class DatabaseTest {
         }
 
     @Test
-    fun `events of a day are newest first, half-open, without deleted ones`() =
+    fun `a day lists its events newest first plus sleep still going on, without deleted ones`() =
         runTest {
             val dao = db.eventDao()
             // A day in Europe/Madrid (UTC+2): 2026-10-07T22:00Z until 2026-10-08T22:00Z.
@@ -80,17 +80,52 @@ class DatabaseTest {
             dao.upsert(event("first", "2026-10-07T22:00:00Z"))
             dao.upsert(event("noon", "2026-10-08T10:00:00Z"))
             dao.upsert(event("deleted", "2026-10-08T11:00:00Z", deletedAt = 1))
-            dao.upsert(event("night", "2026-10-08T19:30:00Z", type = "sleep"))
             dao.upsert(event("next-day", "2026-10-08T22:00:00Z"))
+            // Night sleep that began the evening before and ended this morning.
+            dao.upsert(
+                event("night", "2026-10-07T19:30:00Z", type = "sleep").copy(endedAt = millis("2026-10-08T05:00:00Z")),
+            )
+            // Sleep that ended before the day began does not belong to it.
+            dao.upsert(
+                event("old-nap", "2026-10-07T15:00:00Z", type = "sleep").copy(endedAt = millis("2026-10-07T16:00:00Z")),
+            )
 
-            dao.observeStartedBetween("baby-1", from, to).test {
-                assertEquals(listOf("night", "noon", "first"), awaitItem().map { it.id })
+            dao.observeTouching("baby-1", from, to).test {
+                assertEquals(listOf("noon", "first", "night"), awaitItem().map { it.id })
 
                 // The UI is driven by the table: a new row re-emits.
                 dao.upsert(event("late", "2026-10-08T21:00:00Z"))
-                assertEquals(listOf("late", "night", "noon", "first"), awaitItem().map { it.id })
+                assertEquals(listOf("late", "noon", "first", "night"), awaitItem().map { it.id })
             }
             assertNull(dao.get("missing"))
+            // "Latest" is not limited to the day.
+            assertEquals("next-day", dao.observeLatest("baby-1", "bottle").first()?.id)
+        }
+
+    @Test
+    fun `overlap detection treats an open session as never ending`() =
+        runTest {
+            val dao = db.eventDao()
+            dao.upsert(
+                event("nap", "2026-10-08T10:00:00Z", type = "sleep").copy(endedAt = millis("2026-10-08T11:00:00Z")),
+            )
+            dao.upsert(event("open", "2026-10-08T19:00:00Z", type = "sleep"))
+
+            suspend fun overlap(
+                start: String,
+                end: String?,
+                exclude: String = "",
+            ) = dao.findOverlappingSleep("baby-1", exclude, millis(start), end?.let(::millis) ?: Long.MAX_VALUE)?.id
+
+            assertEquals("nap", overlap("2026-10-08T10:30:00Z", "2026-10-08T12:00:00Z"))
+            // Touching end-to-start is not an overlap.
+            assertNull(overlap("2026-10-08T11:00:00Z", "2026-10-08T12:00:00Z"))
+            assertNull(overlap("2026-10-08T09:00:00Z", "2026-10-08T10:00:00Z"))
+            assertEquals("open", overlap("2026-10-08T23:00:00Z", "2026-10-08T23:30:00Z"))
+            assertEquals("nap", overlap("2026-10-08T09:00:00Z", null))
+            // A session does not overlap itself when it is being edited.
+            assertNull(overlap("2026-10-08T10:15:00Z", "2026-10-08T10:45:00Z", exclude = "nap"))
+            assertEquals("open", dao.openSleep("baby-1")?.id)
         }
 
     @Test

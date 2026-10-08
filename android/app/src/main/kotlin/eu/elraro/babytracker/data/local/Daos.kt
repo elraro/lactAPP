@@ -29,19 +29,72 @@ interface BabyDao {
 
 @Dao
 interface EventDao {
-    /** Events that start in [from, to), newest first. Sleep that began earlier is not included. */
+    /**
+     * Everything that touches [from, to): events that start in the range, plus sleep that
+     * started earlier and was still going on (ended later or not yet ended).
+     */
     @Query(
         """
         SELECT * FROM events
-        WHERE baby_id = :babyId AND deleted_at IS NULL AND started_at >= :from AND started_at < :to
+        WHERE baby_id = :babyId AND deleted_at IS NULL AND started_at < :to
+          AND (started_at >= :from OR (type = 'sleep' AND (ended_at IS NULL OR ended_at >= :from)))
         ORDER BY started_at DESC, id DESC
         """,
     )
-    fun observeStartedBetween(
+    fun observeTouching(
         babyId: String,
         from: Long,
         to: Long,
     ): Flow<List<EventEntity>>
+
+    @Query(
+        """
+        SELECT * FROM events
+        WHERE baby_id = :babyId AND type = :type AND deleted_at IS NULL
+        ORDER BY started_at DESC, id DESC LIMIT 1
+        """,
+    )
+    fun observeLatest(
+        babyId: String,
+        type: String,
+    ): Flow<EventEntity?>
+
+    @Query(
+        """
+        SELECT * FROM events
+        WHERE baby_id = :babyId AND type = 'sleep' AND ended_at IS NULL AND deleted_at IS NULL
+        ORDER BY started_at DESC, id DESC LIMIT 1
+        """,
+    )
+    fun observeOpenSleep(babyId: String): Flow<EventEntity?>
+
+    @Query(
+        """
+        SELECT * FROM events
+        WHERE baby_id = :babyId AND type = 'sleep' AND ended_at IS NULL AND deleted_at IS NULL
+        ORDER BY started_at DESC, id DESC LIMIT 1
+        """,
+    )
+    suspend fun openSleep(babyId: String): EventEntity?
+
+    /**
+     * Another sleep session whose interval intersects [start, end). An open session counts
+     * as never ending; pass Long.MAX_VALUE as [end] for a session that is itself open.
+     */
+    @Query(
+        """
+        SELECT * FROM events
+        WHERE baby_id = :babyId AND type = 'sleep' AND deleted_at IS NULL AND id != :excludeId
+          AND started_at < :end AND COALESCE(ended_at, 9223372036854775807) > :start
+        ORDER BY started_at LIMIT 1
+        """,
+    )
+    suspend fun findOverlappingSleep(
+        babyId: String,
+        excludeId: String,
+        start: Long,
+        end: Long,
+    ): EventEntity?
 
     @Query("SELECT * FROM events WHERE id = :id")
     suspend fun get(id: String): EventEntity?

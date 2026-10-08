@@ -121,3 +121,17 @@ fun sessionJson(
                "updated_at":"2026-10-08T12:00:00Z"},
      "server_time":"2026-10-08T12:00:00Z"}
     """.trimIndent()
+
+/** A clock and zone the test controls. */
+class FakeTime(
+    var now: java.time.Instant = java.time.Instant.parse("2026-10-08T12:30:00Z"),
+    var zone: java.time.ZoneId = java.time.ZoneId.of("Europe/Madrid"),
+) : eu.elraro.babytracker.domain.TimeSource() {
+    override fun now(): java.time.Instant = now
+
+    override fun zone(): java.time.ZoneId = zone
+
+    fun advance(duration: java.time.Duration) {
+        now = now.plus(duration)
+    }
+}

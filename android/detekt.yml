@@ -9,11 +9,15 @@ complexity:
     # constructors list injected dependencies.
     ignoreAnnotated: ['Composable']
     constructorThreshold: 10
+    functionThreshold: 7
   LongMethod:
     ignoreAnnotated: ['Composable']
   TooManyFunctions:
+    # A screen is one file of small composables; a repository or view model exposes one
+    # small function per user action. Splitting them by count alone would scatter a feature.
     ignoreAnnotated: ['Dao']
-    thresholdInClasses: 15
+    thresholdInClasses: 25
+    thresholdInFiles: 25
 style:
   MagicNumber:
     ignoreAnnotated: ['Composable']
