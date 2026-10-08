@@ -1,0 +1,46 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.jks
+*.keystore
+keystore.properties
+google-services.json
+
+# OS / editors
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+*.iml
+.vscode/
+.claude/settings.local.json
+
+# Go
+server/bin/
+server/tmp/
+*.test
+*.out
+coverage.*
+
+# Android / Gradle
+android/.gradle/
+android/build/
+android/**/build/
+android/local.properties
+android/captures/
+android/.kotlin/
+android/.cxx/
+*.apk
+*.aab
+*.hprof
+
+# Local data
+*.db
+*.sqlite
+*.dump
+*.sql.gz
+deploy/data/
+pgdata/
