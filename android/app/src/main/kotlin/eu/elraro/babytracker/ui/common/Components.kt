@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -47,10 +48,13 @@ fun FormTextField(
     modifier: Modifier = Modifier,
     @StringRes error: Int? = null,
     supportingText: String? = null,
+    isError: Boolean = error != null,
     placeholder: String? = null,
     enabled: Boolean = true,
     keyboardType: KeyboardType = KeyboardType.Text,
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
     imeAction: ImeAction = ImeAction.Next,
+    singleLine: Boolean = true,
 ) {
     OutlinedTextField(
         value = value,
@@ -58,11 +62,12 @@ fun FormTextField(
         modifier = modifier.fillMaxWidth(),
         label = { Text(stringResource(label)) },
         placeholder = placeholder?.let { { Text(it) } },
-        isError = error != null,
+        isError = isError,
         supportingText = (error?.let { stringResource(it) } ?: supportingText)?.let { { Text(it) } },
         enabled = enabled,
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+        singleLine = singleLine,
+        keyboardOptions =
+            KeyboardOptions(capitalization = capitalization, keyboardType = keyboardType, imeAction = imeAction),
     )
 }
 

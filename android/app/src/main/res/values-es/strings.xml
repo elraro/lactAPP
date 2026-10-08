@@ -72,4 +72,76 @@
     <string name="settings_account_server">Servidor</string>
     <string name="sign_out_confirm_title">¿Cerrar sesión?</string>
     <string name="sign_out_confirm_body">Se borrarán los datos guardados en este teléfono. Todo lo que ya esté sincronizado sigue en el servidor.</string>
+    <!-- Today: summary -->
+    <string name="action_previous_day">Día anterior</string>
+    <string name="action_next_day">Día siguiente</string>
+    <string name="card_last_feed">Última toma</string>
+    <string name="card_no_feed">Sin tomas registradas</string>
+    <string name="card_last_diaper">Último pañal</string>
+    <string name="card_no_diaper">Sin pañales registrados</string>
+    <string name="card_sleep">Sueño</string>
+    <string name="card_no_sleep">Sin sueño registrado</string>
+    <string name="sleep_sleeping_since">Durmiendo desde: %1$s</string>
+    <string name="sleep_awake_since">Sin dormir desde: %1$s</string>
+    <string name="value_time_and_detail">%1$s · %2$s</string>
+    <string name="action_add_bottle">Biberón</string>
+    <string name="action_add_diaper">Pañal</string>
+    <string name="action_sleep">Dormir</string>
+    <string name="action_wake">Despertar</string>
+    <string name="action_add_past_sleep">Añadir sueño pasado</string>
+
+    <!-- Quick entry -->
+    <string name="bottle_sheet_title">¿Cuánto?</string>
+    <string name="bottle_other_amount">Otra cantidad</string>
+    <string name="diaper_sheet_title">¿De qué tipo?</string>
+    <string name="amount_ml">%1$d ml</string>
+    <string name="diaper_wet">Pipí</string>
+    <string name="diaper_dirty">Caca</string>
+    <string name="diaper_both">Pipí y caca</string>
+    <string name="sleep_nap">Siesta</string>
+    <string name="sleep_night">Noche</string>
+    <string name="milk_formula">Fórmula</string>
+    <string name="milk_breast">Leche materna</string>
+    <string name="milk_mixed">Mixta</string>
+
+    <!-- Timeline -->
+    <string name="filter_all">Todo</string>
+    <string name="filter_bottles">Biberones</string>
+    <string name="filter_diapers">Pañales</string>
+    <string name="filter_sleep">Sueño</string>
+    <string name="row_sleep_start">Se durmió</string>
+    <string name="row_sleep_end">Se despertó</string>
+    <string name="row_measurement">Medición</string>
+    <string name="row_note">Nota</string>
+    <string name="duration_h_min">%1$d h %2$d min</string>
+    <string name="duration_min">%1$d min</string>
+    <string name="action_edit">Editar</string>
+
+    <!-- Editor -->
+    <string name="field_amount_ml">Cantidad (ml)</string>
+    <string name="field_time">Hora</string>
+    <string name="field_start">Inicio</string>
+    <string name="field_end">Fin</string>
+    <string name="field_milk">Tipo de leche</string>
+    <string name="field_notes">Notas</string>
+    <string name="end_not_set">Sin indicar</string>
+    <string name="sleep_still_asleep">Sigue durmiendo</string>
+    <string name="action_set_end">Poner hora de fin</string>
+    <string name="action_clear_end">Quitar hora de fin</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_undo">Deshacer</string>
+    <string name="action_ok">Aceptar</string>
+    <string name="message_deleted">Eliminado</string>
+    <string name="error_amount_range">Introduce una cantidad entre %1$d y %2$d ml</string>
+    <string name="error_end_before_start">El fin debe ser posterior al inicio</string>
+    <string name="error_sleep_overlap">Se solapa con otro periodo de sueño. Cambia las horas o edita el otro periodo.</string>
+    <string name="error_not_saved">No se pudo guardar. Inténtalo de nuevo.</string>
+
+    <!-- Baby -->
+    <string name="add_baby_title">Añade a tu bebé</string>
+    <string name="add_baby_body">Solo tienes que hacerlo una vez.</string>
+    <string name="field_baby_name">Nombre del bebé</string>
+    <string name="field_date_of_birth">Fecha de nacimiento</string>
+    <string name="action_choose_date">Elegir fecha</string>
 </resources>

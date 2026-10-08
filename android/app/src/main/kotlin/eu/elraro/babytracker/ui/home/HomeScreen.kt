@@ -1,10 +1,10 @@
 package eu.elraro.babytracker.ui.home
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BarChart
-import androidx.compose.material.icons.outlined.ChildCare
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Today
@@ -29,6 +29,7 @@ import eu.elraro.babytracker.R
 import eu.elraro.babytracker.data.session.Account
 import eu.elraro.babytracker.ui.common.EmptyState
 import eu.elraro.babytracker.ui.settings.SettingsScreen
+import eu.elraro.babytracker.ui.today.TodayScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -84,10 +85,11 @@ fun HomeScreen(account: Account) {
         NavHost(
             navController = navController,
             startDestination = TodayRoute,
-            modifier = Modifier.padding(padding),
+            // Consumed so that screens adding keyboard padding do not also pad for the bottom bar.
+            modifier = Modifier.padding(padding).consumeWindowInsets(padding),
         ) {
             composable<TodayRoute> {
-                EmptyState(Icons.Outlined.ChildCare, R.string.today_empty_title, R.string.today_empty_body)
+                TodayScreen()
             }
             composable<StatisticsRoute> {
                 EmptyState(Icons.Outlined.Insights, R.string.stats_empty_title, R.string.stats_empty_body)
