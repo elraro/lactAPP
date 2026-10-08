@@ -17,8 +17,8 @@ No public registration, no social features, no ads, no analytics.
 | 0 | Repository bootstrap | done |
 | 1 | Architecture | done (approved 2026-10-08) |
 | 2 | Backend foundation | done |
-| 3 | Android foundation | next |
-| 4 | Core tracking | not started |
+| 3 | Android foundation | done |
+| 4 | Core tracking | next |
 | 5 | Synchronization | not started |
 | 6 | Statistics | not started |
 | 7 | Sleep prediction | not started |
@@ -39,7 +39,7 @@ Start with [AGENTS.md](AGENTS.md) (project rules), then:
 ## Layout
 
 ```
-android/    Android app (Phase 3)
+android/    Android app
 server/     Go API
 deploy/     Reverse proxy and operations files
 docs/       Design documents
@@ -81,3 +81,14 @@ make check                    # format, vet, staticcheck, sqlc diff, tests (race
 
 Database tests create and drop their own databases on that server; without the
 variable they are skipped.
+
+## Developing the app
+
+```sh
+cd android
+echo "sdk.dir=$HOME/Android/Sdk" > local.properties    # or set ANDROID_HOME
+./gradlew ktlintCheck detekt lint test assembleDebug
+```
+
+The debug build accepts a plain `http://` server address (for example
+`http://10.0.2.2:8080` from the emulator); the release build only accepts HTTPS.

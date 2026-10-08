@@ -231,10 +231,13 @@ Room holds `babies`, `events` and a one-row `family` table with the same columns
 instants as epoch milliseconds (`Long`), plus:
 
 ```
-pending_mutations(mutation_id PK, entity, entity_id, op, fields_json, base_version,
-                  created_at, attempt_count, last_error_code, state)   -- state: pending | failed
-sync_state(id=1, cursor, sync_epoch, last_success_at, server_time_offset_ms)
+pending_mutations(sequence PK autoincrement, mutation_id UNIQUE, entity, entity_id, op,
+                  fields_json, base_version, created_at, sent, error_code)
+sync_state(id=1, cursor, last_success_at, server_time_offset_ms)
 ```
 
-Local-only column on entities: `sync_status` (`synced` | `pending` | `failed`),
-derived from the queue and used for the small "not yet synced" indicator.
+`sequence` is the send order. `sent` marks a mutation that may have reached the server
+and must never change again; `error_code` marks a permanent rejection. A row's
+"not yet synced" / "failed" indicator is derived from this table, not stored on the
+entity. `version = 0` on an entity means the server has not seen it yet. The sync epoch
+is inside the opaque cursor. The exported schema is in `android/app/schemas/`.

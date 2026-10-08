@@ -1,6 +1,7 @@
 # Architecture
 
-> **Status: APPROVED 2026-10-08.** The server side (Phase 2) is implemented; Android is not started.
+> **Status: APPROVED 2026-10-08.** The server (Phase 2) and the Android foundation (Phase 3: sign-in, session,
+> local database, navigation, language) are implemented.
 > Section 10 records the decisions that were taken.
 
 ## 1. Guiding principle
@@ -107,16 +108,18 @@ That is what makes them deterministic and testable.
 | Settings | DataStore (Preferences) | Language is handled by the platform, see §8. |
 | Token storage | DataStore, values encrypted with an Android Keystore AES-GCM key | `security-crypto` is deprecated; this is the same mechanism without the dependency. |
 | Charts | Vico (Compose) | Compose-native, themable, no View interop. Alternative: hand-drawn Canvas — more work, no dependency. |
-| Min / target SDK | 26 / 35 | 26 gives `java.time` without desugaring. |
+| Min / target / compile SDK | 26 / 36 / 37 | 26 gives `java.time` without desugaring; current AndroidX requires compiling against 37. |
+| Application ID | `eu.elraro.babytracker` | Change before a first release if another ID is wanted; it cannot change afterwards. |
+| Build | Gradle 9.8 wrapper, AGP 9.4 (built-in Kotlin), versions in `gradle/libs.versions.toml`; compiles with a JDK 21 toolchain | |
 | Tests | JUnit, Turbine, Room in-memory, MockWebServer, Robolectric where a Context is needed | |
-| Lint | Android Lint (hard-coded text and missing translation as **errors**), detekt, ktlint | |
+| Lint | Android Lint with warnings as errors (hard-coded text, missing/extra translation, plural candidates), detekt, ktlint; Kotlin warnings are errors | |
 
 Gradle modules:
 
 ```
 android/
   app/      UI, ViewModels, repositories, Room, sync, DI
-  stats/    pure Kotlin/JVM: statistics + prediction. No Android imports.
+  stats/    (Phase 6) pure Kotlin/JVM: statistics + prediction. No Android imports.
 ```
 
 Two modules, not twenty. `stats` is separate only because the compiler then
@@ -125,17 +128,35 @@ enforces that it stays pure, and its tests run in milliseconds on the JVM.
 Layering inside `app` (package by feature under `ui/`, shared `data/` and `domain/`):
 
 ```
-ui/<feature>/      Screen composables + ViewModel (StateFlow<UiState>)
+ui/<feature>/      Screen composables + ViewModel (StateFlow<UiState>); ui/common for shared pieces
 domain/            Models, and use cases ONLY where there is real logic
                    (StartSleep, EndSleep, SaveSleepSession overlap check, ClassifySleep)
 data/local/        Room entities, DAOs
-data/remote/       Retrofit API, DTOs
-data/repository/   EventRepository, BabyRepository, AuthRepository, SettingsRepository
-data/sync/         SyncEngine, SyncWorker, mutation queue, rebase logic
+data/remote/       Retrofit API, DTOs, ApiResult, interceptors, token authenticator
+data/session/      SessionStore (DataStore) and the Keystore cipher for tokens
+data/repository/   AuthRepository; EventRepository and BabyRepository from Phase 4
+data/sync/         (Phase 5) SyncEngine, SyncWorker, mutation queue, rebase logic
+di/                Hilt modules
 ```
 
 A ViewModel calls a repository directly when the operation is plain CRUD. We do
 not create pass-through use cases.
+
+### Session and network
+
+- The server address is typed at sign-in, so Retrofit is built against a placeholder and
+  an interceptor resolves the real base URL per request.
+- Network calls return `ApiResult` (`Ok` / `Failure(Server(code) | Network | Unexpected)`);
+  exceptions do not cross the data layer. The UI maps codes to string resources.
+- A 401 triggers one token refresh, shared by calls failing together. The refresh is
+  executed synchronously inside the authenticator: an enqueued call would wait for an
+  OkHttp per-host slot held by the very calls waiting for it (deadlock, covered by a test).
+- If the server rejects the refresh token the session *expires*: tokens are removed,
+  local data and the account identity stay, and the login screen explains what happened.
+- Explicit sign-out deletes all local data. Signing in as a different family also
+  wipes the previous family's local data before the new session is stored.
+- Android backup and device transfer are disabled: the server is the copy, and tokens
+  are bound to the device's Keystore.
 
 ### Write path (every user action)
 

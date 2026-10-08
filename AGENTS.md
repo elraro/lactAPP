@@ -10,8 +10,9 @@ app (Kotlin, Compose), a single Go REST server, and PostgreSQL. Parents record
 bottles, diapers, sleep and measurements; the system derives statistics and a
 next-nap estimate; an optional AI explains those results.
 
-**Current phase:** 2 complete (backend: auth, families, babies, events, sync push/pull).
-Next: Phase 3 — Android foundation. Statistics, prediction and AI do not exist yet.
+**Current phase:** 3 complete (backend; Android sign-in, session, Room schema, navigation,
+language selector). Next: Phase 4 — core tracking. The app records nothing yet and does
+not sync; statistics, prediction and AI do not exist.
 Update this line when a phase completes.
 
 ## 2. Source of truth
@@ -49,7 +50,7 @@ AGENTS.md  README.md  .env.example  docker-compose.yml
 docs/        the documents above
 server/      Go module: cmd/babytracker, internal/{config,httpapi,auth,syncsvc,store,apperr,testutil}, migrations/
              (internal/{stats,predict,ai} arrive in Phases 6–8)
-android/     Gradle project: app/ (UI, data, sync), stats/ (pure Kotlin)
+android/     Gradle project: app/ (UI, data, DI; sync from Phase 5), stats/ (pure Kotlin, Phase 6)
 testdata/    stats/ golden fixtures shared by the Go and Kotlin engines
 deploy/      reverse proxy config, backup scripts
 ```
@@ -79,7 +80,7 @@ considered · errors handled and surfaced to the user · security implications c
 |---|---|
 | Server | `cd server && make check` — gofmt, `go vet`, `staticcheck`, `sqlc diff`, `go test -race`, build |
 | Server, after editing `internal/store/queries/*.sql` or a migration | `make generate` and commit the generated code |
-| Android (from Phase 3) | `cd android && ./gradlew ktlintCheck detekt lint test assembleDebug` |
+| Android | `cd android && ./gradlew ktlintCheck detekt lint test assembleDebug` (`ktlintFormat` fixes style). Needs `android/local.properties` with `sdk.dir=…` or `ANDROID_HOME`; compiles with a JDK 21 toolchain. |
 | Stack | `docker compose up -d` |
 
 Database tests need `BT_TEST_DATABASE_URL` pointing at a PostgreSQL 17 server on which
@@ -114,6 +115,13 @@ from a run with skips. Tools: `go install github.com/sqlc-dev/sqlc/cmd/sqlc@late
 - Layers: `ui` → `domain` (only where logic exists) → `data`. No pass-through use cases.
 - State is exposed as `StateFlow<UiState>`; composables are stateless where practical.
 - `android/stats` must not import `android.*` or `androidx.*`.
+- Data-layer network calls return `ApiResult`; never let an HTTP or I/O exception reach a
+  ViewModel. Map `ApiError` to text with `ui/common/ErrorMessages.kt`.
+- Tests use the real data layer against MockWebServer and in-memory Room
+  (`TestBackend` in `src/test`), not hand-written fakes of repositories.
+- Room schema changes need a version bump, a migration and the exported schema committed.
+- Lint and compiler warnings are errors. Fix the cause; a suppression needs a comment
+  saying why (see `app/lint.xml`).
 - Main-screen actions must stay reachable with one thumb: primary touch targets
   ≥ 56 dp, logging a bottle or a diaper in ≤ 2 taps.
 - Support light and dark themes; never hard-code colors outside the theme.
@@ -148,7 +156,10 @@ from a run with skips. Tools: `go install github.com/sqlc-dev/sqlc/cmd/sqlc@late
 - Spanish text is written as natural Spanish, not word-for-word translation.
   Do not mix languages on a screen.
 - Server error **codes** are mapped to string resources in the app.
-- Language choice uses per-app locales (System default / English / Español).
+- Language choice uses per-app locales (System default / English / Español). Adding a
+  language means: `values-xx/strings.xml`, `res/xml/locales_config.xml`, `localeFilters`
+  in `app/build.gradle.kts` and `AppLanguage` — a test checks the last two agree.
+- Spanish `<plurals>` need the `many` quantity as well as `one` and `other`.
 
 ## 11. Time rules
 
