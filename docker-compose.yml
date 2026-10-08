@@ -1,0 +1,57 @@
+# docker compose up -d                  → database + API on http://127.0.0.1:8080
+# docker compose --profile proxy up -d  → also Caddy with automatic HTTPS for BT_PUBLIC_HOSTNAME
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      BT_ENV: ${BT_ENV:-production}
+      BT_HTTP_ADDR: ":8080"
+      BT_DATABASE_URL: ${BT_DATABASE_URL}
+      BT_LOG_LEVEL: ${BT_LOG_LEVEL:-info}
+      BT_JWT_SIGNING_KEY: ${BT_JWT_SIGNING_KEY}
+      BT_ACCESS_TOKEN_TTL: ${BT_ACCESS_TOKEN_TTL:-15m}
+      BT_REFRESH_TOKEN_TTL: ${BT_REFRESH_TOKEN_TTL:-2160h}
+      BT_TRUSTED_PROXIES: ${BT_TRUSTED_PROXIES:-}
+    ports:
+      # Loopback only: plain HTTP must not be reachable from the network.
+      - "127.0.0.1:8080:8080"
+
+  proxy:
+    image: caddy:2-alpine
+    profiles: ["proxy"]
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      BT_PUBLIC_HOSTNAME: ${BT_PUBLIC_HOSTNAME}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
