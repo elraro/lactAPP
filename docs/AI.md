@@ -1,6 +1,6 @@
 # AI integration
 
-> **Status: PROPOSED — awaiting review.**
+> **Status: APPROVED 2026-10-08.** Not implemented yet.
 
 ## 1. Role
 

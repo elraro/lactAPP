@@ -1,7 +1,7 @@
 # Architecture
 
-> **Status: PROPOSED — awaiting review.** Nothing here is implemented yet.
-> Section 10 lists the decisions that need an explicit answer before Phase 2.
+> **Status: APPROVED 2026-10-08.** The server side (Phase 2) is implemented; Android is not started.
+> Section 10 records the decisions that were taken.
 
 ## 1. Guiding principle
 
@@ -82,10 +82,12 @@ cmd/babytracker/        main: serve | migrate | admin create-family | admin rese
 internal/config/        env parsing + validation
 internal/httpapi/       router, middleware (auth, request id, logging, rate limit), handlers, DTOs
 internal/auth/          hashing, tokens, invites
-internal/sync/          push (mutation application) and pull (change feed)
-internal/stats/         pure functions over []Event — no DB, no clock, no I/O
-internal/predict/       next-sleep model — pure, depends on stats
-internal/ai/            AIProvider interface, providers, context builder, prompt
+internal/syncsvc/       push (mutation application) and pull (change feed)
+internal/apperr/        error type with the stable codes of API.md
+internal/testutil/      throwaway PostgreSQL database per test
+internal/stats/         (Phase 6) pure functions over []Event — no DB, no clock, no I/O
+internal/predict/       (Phase 7) next-sleep model — pure, depends on stats
+internal/ai/            (Phase 8) AIProvider interface, providers, context builder, prompt
 internal/store/         sqlc-generated queries + thin transaction helpers
 migrations/             goose SQL
 ```
@@ -158,16 +160,20 @@ is open, or on next open.
   90-day sliding expiry, **rotated on every use**.
   - Reuse of an already-rotated token revokes the whole chain for that device
     (stolen-token detection)...
-  - ...except within a 60 s grace window, where the same successor is re-issued.
+  - ...except within a 60 s grace window, where another successor is issued.
     Without this, a refresh whose response is lost on a bad connection would log
     the parent out.
 - **Logout** revokes the device's chain. **Password change** revokes all other
-  devices. A device list in Settings allows revoking a lost phone.
+  devices. A device list in Settings allows revoking a lost phone. Revocation stops
+  refresh immediately; an access token already issued stays valid until it expires
+  (≤ 15 min), which is the price of verifying access tokens without a database lookup.
+- A device ID is bound to the family that first signed in with it.
 - **Rate limiting**: login, refresh and invite redemption are limited per IP and
   per e-mail; failed logins use a constant-time comparison path whether or not the
   e-mail exists.
 - **Provisioning**: `babytracker admin create-family --name … --email …` creates
-  the family and first user and prints a one-time password-setup code. Other
+  the family and first user and prints a one-time password-setup code (valid 7 days).
+  `babytracker admin reset-password --email …` issues a new one for an existing user. Other
   parents: an authenticated member generates an invite code (single use, 48 h),
   the new parent redeems it in the app and chooses their own password.
 
@@ -226,9 +232,10 @@ is open, or on next open.
 - AI calls happen only if the operator configured a provider **and** the family
   enabled AI. See [AI.md](AI.md).
 
-## 10. Decisions needed before implementation
+## 10. Decisions
 
-Each has a recommendation; the documents are written assuming the recommendation.
+All recommendations below were **approved on 2026-10-08**. The alternatives are kept
+for the record.
 
 | # | Question | Recommendation | Main alternative |
 |---|---|---|---|

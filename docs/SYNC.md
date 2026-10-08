@@ -1,6 +1,7 @@
 # Synchronization protocol
 
-> **Status: PROPOSED — awaiting review.**
+> **Status: APPROVED 2026-10-08.** Server side implemented in `server/internal/syncsvc`
+> (Phase 2); the Android side is Phase 5.
 
 ## 1. Model in one paragraph
 
@@ -100,10 +101,13 @@ Response — one result per mutation, same order:
 | `status` | Meaning | Client action |
 |---|---|---|
 | `applied` | Change is durable. `data` is the resulting row. `merged: true` if the row had changed since `base_version`. | Remove from queue, store `data`. |
-| `rejected` | Permanent failure, with `error_code` (`validation_failed`, `entity_deleted`, `not_found`, `forbidden`). | Mark mutation `failed`; see §6. |
+| `rejected` | Permanent failure, with `error_code` (`validation_failed`, `entity_deleted`, `not_found`, `forbidden`) and, for validation, `fields` (`{"amount_ml": "out_of_range"}`). | Mark mutation `failed`; see §6. |
 
-There is no `duplicate` status on purpose: a replay returns the **original
-result**, so the client cannot tell and does not need to.
+There is no `duplicate` status on purpose: a replay returns the **recorded
+verdict** (`status`, `error_code`, `merged`) together with the row's *current*
+state, so the client cannot tell and does not need to. A rejection is as
+permanent as an application: retrying a rejected `mutation_id` is never applied
+later; the client must issue a new mutation.
 
 ### Server algorithm (per mutation, each in its own transaction)
 
@@ -113,13 +117,18 @@ result**, so the client cannot tell and does not need to.
 2. Authorize: the entity (and the referenced baby) must belong to the caller's
    family. `family_id` and attribution columns are set by the server, never read
    from `fields`.
-3. Allocate `seq` (locks the family row — serializes this family's writers).
+3. (The family row is locked before step 1, which serializes this family's
+   writers; `seq` = family counter + 1, consumed only if a row is written.)
 4. Apply:
    - `upsert`, row absent → insert; all required fields must be present.
    - `upsert`, row present and live → overwrite the listed fields only.
    - `upsert`, row tombstoned → `rejected: entity_deleted`.
-   - `delete` → set `deleted_at` (no-op if already set).
-   - `restore` → clear `deleted_at`.
+   - `delete` → set `deleted_at`. `restore` → clear it. Both are no-ops (no new
+     version, nothing in the feed) if the row is already in that state, and
+     `rejected: not_found` if the row does not exist.
+   - An ID that exists in another family → `rejected: forbidden`. A `baby_id`
+     that is unknown *or* belongs to another family → `rejected: not_found`.
+   - `baby_id` and `type` of an event cannot change after creation.
    - Validate the *resulting* row (DB CHECKs + application rules). Failure →
      roll back, record `rejected`.
 5. `version += 1`, set `seq`, `updated_*`. Insert the `applied_mutations` row.

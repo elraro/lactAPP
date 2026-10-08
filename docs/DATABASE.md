@@ -1,6 +1,7 @@
 # Database
 
-> **Status: PROPOSED — awaiting review.**
+> **Status: APPROVED 2026-10-08.** Implemented in `server/migrations/00001_init.sql`,
+> which is authoritative for exact column definitions.
 
 PostgreSQL 17. All instants are `timestamptz` (stored UTC). All primary keys are
 UUIDs; rows that originate on a device use client-generated **UUIDv7**.
@@ -32,8 +33,8 @@ Every syncable table has:
 | `created_by_user_id`, `created_by_device_id`, `updated_by_user_id`, `updated_by_device_id` | Attribution ("recorded by Dad's phone"). |
 
 `seq` is allocated with
-`UPDATE families SET sync_seq = sync_seq + 1 WHERE id = $1 RETURNING sync_seq`
-inside the writing transaction. The row lock serializes writers of one family, so
+`SELECT … FROM families WHERE id = $1 FOR UPDATE` at the start of the writing
+transaction and `sync_seq + 1` written back before commit. The row lock serializes writers of one family, so
 sequence numbers become visible in order and a reader can never skip a change that
 commits late. (A plain global sequence has exactly that bug.) Contention is
 irrelevant at family scale.
@@ -48,9 +49,9 @@ CREATE TABLE families (
   name        text        NOT NULL,
   timezone    text        NOT NULL,              -- IANA; default reporting zone
   ai_enabled  boolean     NOT NULL DEFAULT false,
-  sync_seq    bigint      NOT NULL DEFAULT 0,    -- change counter
+  sync_seq    bigint      NOT NULL DEFAULT 1,    -- change counter
   sync_epoch  uuid        NOT NULL,              -- changes only if history is rewritten (restore)
-  seq         bigint      NOT NULL DEFAULT 0,    -- this row's own position in the feed
+  seq         bigint      NOT NULL DEFAULT 1,    -- this row's own position in the feed
   version     int         NOT NULL DEFAULT 1,
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now()
@@ -170,7 +171,7 @@ CREATE TABLE events (
 );
 
 CREATE INDEX events_feed     ON events (family_id, seq);
-CREATE INDEX events_timeline ON events (baby_id, started_at DESC) WHERE deleted_at IS NULL;
+CREATE INDEX events_timeline ON events (baby_id, started_at DESC, id DESC);
 CREATE INDEX babies_feed     ON babies (family_id, seq);
 
 CREATE TABLE applied_mutations (                  -- idempotency log
@@ -181,12 +182,12 @@ CREATE TABLE applied_mutations (                  -- idempotency log
   entity_id      uuid        NOT NULL,
   status         text        NOT NULL,            -- applied | rejected
   error_code     text,
-  result_version int,
+  merged         boolean     NOT NULL DEFAULT false,
   applied_at     timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (family_id, mutation_id)
 );
 
-CREATE TABLE ai_analyses (
+CREATE TABLE ai_analyses (                        -- Phase 8, not created yet
   id           uuid PRIMARY KEY,
   family_id    uuid        NOT NULL REFERENCES families(id),
   baby_id      uuid        NOT NULL,
@@ -221,10 +222,8 @@ CREATE TABLE ai_analyses (
   has a bug.
 - **Overlapping sleep** is deliberately *not* an exclusion constraint — see
   [SYNC.md](SYNC.md) §7.
-- **Retention.** `applied_mutations` rows older than 90 days are pruned by a daily
-  job (a device offline longer than that would retry with changed semantics only
-  for *updates* to rows edited meanwhile; creates stay idempotent via primary key).
-  Used refresh tokens and expired invites are pruned after 30 days.
+- **Retention.** Nothing is pruned yet. Planned (Phase 9): drop `applied_mutations`
+  rows older than 90 days and used refresh tokens / expired invites older than 30 days.
 
 ## 5. Android (Room) mirror
 

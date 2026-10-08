@@ -1,6 +1,6 @@
 # Statistics and prediction
 
-> **Status: PROPOSED — awaiting review.** Assumes decision D1 = "both engines".
+> **Status: APPROVED 2026-10-08.** Not implemented yet.
 
 ## 1. Rules
 

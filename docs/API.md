@@ -1,6 +1,7 @@
 # REST API
 
-> **Status: PROPOSED — awaiting review.**
+> **Status: APPROVED 2026-10-08.** §1–4 and §7 are implemented; §5 (statistics) and §6 (AI)
+> are specified for Phases 6–8 and return 404 until then.
 
 Base path `/api/v1`. JSON only (`Content-Type: application/json`). HTTPS only in
 production.
@@ -72,6 +73,15 @@ production.
 // POST /auth/invites/redeem
 { "code": "K7QF-2M9X-PD4T", "email": "b@example.com", "display_name": "…", "password": "…",
   "device": { … } }                                       // 200: same as login
+// A password-setup code (from the admin CLI) needs only code, password and device.
+// Unknown, used and expired codes all answer 410 invite_expired.
+
+// POST /auth/password           → 204
+{ "current_password": "…", "new_password": "…" }
+
+// GET /devices                  → 200
+{ "devices": [ { "id": "…", "user_id": "…", "name": "Pixel 8", "platform": "android",
+                 "app_version": "1.0.0", "created_at": "…", "last_seen_at": "…", "revoked_at": null } ] }
 ```
 
 Password policy: 10–128 characters, no composition rules. Family creation has no
@@ -85,7 +95,7 @@ HTTP endpoint; it is a CLI command on the server (see ARCHITECTURE.md §6).
 | PATCH | `/family` | `name`, `timezone`, `ai_enabled` (online-only on purpose: AI consent is not queued offline) |
 | GET | `/babies` | Babies of the family |
 | GET | `/babies/{id}` | One baby |
-| GET | `/babies/{id}/events` | Query events: `from`, `to`, `type` (repeatable), `limit` (≤500), `page_token`, `include_deleted` |
+| GET | `/babies/{id}/events` | Newest first. `from` (inclusive), `to` (exclusive), `type` (repeatable), `limit` (default 100, ≤500), `page_token`, `include_deleted=true`. Returns `{events, next_page_token}` |
 
 Babies and events are **created and modified through sync push** (§4). The `GET`
 endpoints exist for diagnostics, scripts and any future non-offline client.
@@ -160,7 +170,7 @@ Returns `403 ai_not_configured` if the operator set no provider and
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | GET | `/healthz` | public | Process is up |
-| GET | `/readyz` | public | Database reachable, migrations applied |
+| GET | `/readyz` | public | Database reachable (migrations run before the server listens) |
 
 ## 8. Limits
 

@@ -10,7 +10,8 @@ app (Kotlin, Compose), a single Go REST server, and PostgreSQL. Parents record
 bottles, diapers, sleep and measurements; the system derives statistics and a
 next-nap estimate; an optional AI explains those results.
 
-**Current phase:** 1 — architecture proposed, awaiting review. No application code yet.
+**Current phase:** 2 complete (backend: auth, families, babies, events, sync push/pull).
+Next: Phase 3 — Android foundation. Statistics, prediction and AI do not exist yet.
 Update this line when a phase completes.
 
 ## 2. Source of truth
@@ -44,9 +45,10 @@ Raw events → Deterministic statistics → Predictions / patterns → AI interp
 ## 4. Repository layout
 
 ```
-AGENTS.md  README.md  .env.example  docker-compose.yml (Phase 2)
+AGENTS.md  README.md  .env.example  docker-compose.yml
 docs/        the documents above
-server/      Go module: cmd/babytracker, internal/{config,httpapi,auth,sync,stats,predict,ai,store}, migrations/
+server/      Go module: cmd/babytracker, internal/{config,httpapi,auth,syncsvc,store,apperr,testutil}, migrations/
+             (internal/{stats,predict,ai} arrive in Phases 6–8)
 android/     Gradle project: app/ (UI, data, sync), stats/ (pure Kotlin)
 testdata/    stats/ golden fixtures shared by the Go and Kotlin engines
 deploy/      reverse proxy config, backup scripts
@@ -73,13 +75,18 @@ considered · errors handled and surfaced to the user · security implications c
 
 ## 6. Commands
 
-> Filled in as each component is created. Until then these are the intended targets.
-
 | Component | Check |
 |---|---|
-| Server | `cd server && gofmt -l . && go vet ./... && staticcheck ./... && go test ./...` (DB tests need `BT_TEST_DATABASE_URL`) |
-| Android | `cd android && ./gradlew ktlintCheck detekt lint test assembleDebug` |
+| Server | `cd server && make check` — gofmt, `go vet`, `staticcheck`, `sqlc diff`, `go test -race`, build |
+| Server, after editing `internal/store/queries/*.sql` or a migration | `make generate` and commit the generated code |
+| Android (from Phase 3) | `cd android && ./gradlew ktlintCheck detekt lint test assembleDebug` |
 | Stack | `docker compose up -d` |
+
+Database tests need `BT_TEST_DATABASE_URL` pointing at a PostgreSQL 17 server on which
+the user may create databases; each test creates and drops its own. **Without it they
+are skipped, which does not count as passing** — do not report the server as verified
+from a run with skips. Tools: `go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest`,
+`go install honnef.co/go/tools/cmd/staticcheck@latest`.
 
 ## 7. Backend rules
 
@@ -93,6 +100,10 @@ considered · errors handled and surfaced to the user · security implications c
 - Errors returned to clients are `{error:{code,…}}` with stable codes from docs/API.md.
   The server returns **no user-facing text** (AI output excepted).
 - Tests that involve SQL run against real PostgreSQL, not mocks.
+- Validation of synced entities lives in `internal/syncsvc/validate.go` and mirrors the
+  CHECK constraints of the migration. Change both together.
+- Time comes from the injected `now` function, never `time.Now()` inside services, so
+  expiry and grace-window behaviour stays testable.
 
 ## 8. Android rules
 
