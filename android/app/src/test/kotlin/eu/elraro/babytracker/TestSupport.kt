@@ -71,6 +71,10 @@ class TestBackend : AutoCloseable {
         )
     val accountApi = NetworkModule.accountApi(authenticatedClient, json)
 
+    /** How often the code under test asked for a background sync. */
+    var syncRequests = 0
+        private set
+
     val auth =
         AuthRepository(
             authApi = authApi,
@@ -79,6 +83,7 @@ class TestBackend : AutoCloseable {
             database = database,
             json = json,
             deviceName = { "Test phone" },
+            sync = { syncRequests++ },
             io = Dispatchers.Unconfined,
         )
 

@@ -3,6 +3,7 @@ package eu.elraro.babytracker.data.repository
 import androidx.room.withTransaction
 import eu.elraro.babytracker.data.local.AppDatabase
 import eu.elraro.babytracker.data.local.EventEntity
+import eu.elraro.babytracker.data.sync.SyncRequester
 import eu.elraro.babytracker.domain.DiaperKind
 import eu.elraro.babytracker.domain.Event
 import eu.elraro.babytracker.domain.EventProblem
@@ -45,6 +46,7 @@ class EventRepository
     constructor(
         private val db: AppDatabase,
         private val time: TimeSource,
+        private val sync: SyncRequester,
     ) {
         private val events get() = db.eventDao()
 
@@ -83,15 +85,16 @@ class EventRepository
 
         /** Closes the open session now; returns [SaveResult.NotFound] if the baby is not asleep. */
         suspend fun endSleep(babyId: String): SaveResult =
-            db.withTransaction {
-                val open = events.openSleep(babyId) ?: return@withTransaction SaveResult.NotFound
-                // A start time in the future (edited, or a clock that moved) must not produce
-                // a negative duration.
-                val end = maxOf(time.now(), Instant.ofEpochMilli(open.startedAt))
-                val closed = open.copy(endedAt = end.toEpochMilli())
-                write(closed, open)
-                SaveResult.Saved(closed.toDomain()!!)
-            }
+            db
+                .withTransaction {
+                    val open = events.openSleep(babyId) ?: return@withTransaction SaveResult.NotFound
+                    // A start time in the future (edited, or a clock that moved) must not produce
+                    // a negative duration.
+                    val end = maxOf(time.now(), Instant.ofEpochMilli(open.startedAt))
+                    val closed = open.copy(endedAt = end.toEpochMilli())
+                    write(closed, open)
+                    SaveResult.Saved(closed.toDomain()!!)
+                }.also(::requestSyncIfSaved)
 
         /** A blank event for [type] at the current time and zone; not saved yet. */
         fun newEvent(
@@ -117,41 +120,50 @@ class EventRepository
             mustExist: Boolean,
         ): SaveResult {
             event.problem()?.let { return SaveResult.Invalid(it) }
-            return db.withTransaction {
-                val old = events.get(event.id)?.takeIf { it.deletedAt == null }
-                if (mustExist && old == null) return@withTransaction SaveResult.NotFound
-                // The version always comes from the stored row, never from a stale UI copy.
-                val new = event.toEntity().copy(version = old?.version ?: 0)
-                overlappingSleep(new)?.let { return@withTransaction SaveResult.OverlapsSleep(it) }
-                write(new, old)
-                SaveResult.Saved(new.toDomain()!!)
-            }
+            return db
+                .withTransaction {
+                    val old = events.get(event.id)?.takeIf { it.deletedAt == null }
+                    if (mustExist && old == null) return@withTransaction SaveResult.NotFound
+                    // The version always comes from the stored row, never from a stale UI copy.
+                    val new = event.toEntity().copy(version = old?.version ?: 0)
+                    overlappingSleep(new)?.let { return@withTransaction SaveResult.OverlapsSleep(it) }
+                    write(new, old)
+                    SaveResult.Saved(new.toDomain()!!)
+                }.also(::requestSyncIfSaved)
         }
 
         /** Marks the event deleted. It stays on the device so the deletion can be undone. */
         suspend fun delete(id: String) {
-            db.withTransaction {
-                val old = events.get(id)?.takeIf { it.deletedAt == null } ?: return@withTransaction
-                val now = time.now()
-                events.upsert(old.copy(deletedAt = now.toEpochMilli()))
-                db.pendingMutationDao().insert(pendingMutation("event", id, "delete", null, old.version, now))
-            }
+            val deleted =
+                db.withTransaction {
+                    val old = events.get(id)?.takeIf { it.deletedAt == null } ?: return@withTransaction false
+                    val now = time.now()
+                    events.upsert(old.copy(deletedAt = now.toEpochMilli()))
+                    db.pendingMutationDao().insert(pendingMutation("event", id, "delete", null, old.version, now))
+                    true
+                }
+            if (deleted) sync.requestSync()
+        }
+
+        private fun requestSyncIfSaved(result: SaveResult) {
+            if (result is SaveResult.Saved) sync.requestSync()
         }
 
         /** Undoes [delete]. */
         suspend fun restore(id: String): SaveResult =
-            db.withTransaction {
-                val deleted = events.get(id) ?: return@withTransaction SaveResult.NotFound
-                val restored = deleted.copy(deletedAt = null)
-                if (deleted.deletedAt != null) {
-                    overlappingSleep(restored)?.let { return@withTransaction SaveResult.OverlapsSleep(it) }
-                    events.upsert(restored)
-                    db.pendingMutationDao().insert(
-                        pendingMutation("event", id, "restore", null, deleted.version, time.now()),
-                    )
-                }
-                SaveResult.Saved(restored.toDomain()!!)
-            }
+            db
+                .withTransaction {
+                    val deleted = events.get(id) ?: return@withTransaction SaveResult.NotFound
+                    val restored = deleted.copy(deletedAt = null)
+                    if (deleted.deletedAt != null) {
+                        overlappingSleep(restored)?.let { return@withTransaction SaveResult.OverlapsSleep(it) }
+                        events.upsert(restored)
+                        db.pendingMutationDao().insert(
+                            pendingMutation("event", id, "restore", null, deleted.version, time.now()),
+                        )
+                    }
+                    SaveResult.Saved(restored.toDomain()!!)
+                }.also(::requestSyncIfSaved)
 
         private suspend fun overlappingSleep(event: EventEntity): Event? {
             if (event.type != EventType.SLEEP.wire) return null

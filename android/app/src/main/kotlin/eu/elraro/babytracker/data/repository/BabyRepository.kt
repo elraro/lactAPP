@@ -3,6 +3,7 @@ package eu.elraro.babytracker.data.repository
 import androidx.room.withTransaction
 import eu.elraro.babytracker.data.local.AppDatabase
 import eu.elraro.babytracker.data.local.BabyEntity
+import eu.elraro.babytracker.data.sync.SyncRequester
 import eu.elraro.babytracker.domain.Baby
 import eu.elraro.babytracker.domain.Ids
 import eu.elraro.babytracker.domain.TimeSource
@@ -18,6 +19,7 @@ class BabyRepository
     constructor(
         private val db: AppDatabase,
         private val time: TimeSource,
+        private val sync: SyncRequester,
     ) {
         fun observeAll(): Flow<List<Baby>> = db.babyDao().observeAll().map { rows -> rows.map { it.toDomain() } }
 
@@ -43,6 +45,7 @@ class BabyRepository
                     pendingMutation("baby", entity.id, "upsert", entity.createFields(), baseVersion = 0, now = now),
                 )
             }
+            sync.requestSync()
             return entity.toDomain()
         }
     }

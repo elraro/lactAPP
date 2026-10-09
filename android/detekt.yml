@@ -4,6 +4,9 @@ naming:
     # Composable functions are PascalCase by convention.
     ignoreAnnotated: ['Composable']
 complexity:
+  CyclomaticComplexMethod:
+    # A `when` that maps names to values one-to-one is a table, not branching logic.
+    ignoreSimpleWhenEntries: true
   LongParameterList:
     # Stateless composables take their state and callbacks as parameters;
     # constructors list injected dependencies.

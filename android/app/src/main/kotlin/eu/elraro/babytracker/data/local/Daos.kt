@@ -3,6 +3,7 @@ package eu.elraro.babytracker.data.local
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
@@ -22,6 +23,13 @@ interface BabyDao {
 
     @Query("SELECT * FROM babies WHERE id = :id")
     suspend fun get(id: String): BabyEntity?
+
+    /** Rows the server has acknowledged at some point (used when the server lost history). */
+    @Query("SELECT id FROM babies WHERE version > 0")
+    suspend fun syncedIds(): List<String>
+
+    @Query("DELETE FROM babies WHERE id = :id")
+    suspend fun purge(id: String)
 
     @Upsert
     suspend fun upsert(baby: BabyEntity)
@@ -99,6 +107,17 @@ interface EventDao {
     @Query("SELECT * FROM events WHERE id = :id")
     suspend fun get(id: String): EventEntity?
 
+    @Query("SELECT id FROM events WHERE version > 0")
+    suspend fun syncedIds(): List<String>
+
+    /** Live events of [babyId] that the server has never confirmed. */
+    @Query("SELECT * FROM events WHERE baby_id = :babyId AND version = 0 AND deleted_at IS NULL")
+    suspend fun neverUploaded(babyId: String): List<EventEntity>
+
+    /** Physical removal. Only for rows the server does not have; user deletions are tombstones. */
+    @Query("DELETE FROM events WHERE id = :id")
+    suspend fun purge(id: String)
+
     @Upsert
     suspend fun upsert(event: EventEntity)
 }
@@ -125,12 +144,45 @@ interface PendingMutationDao {
 
     @Query("SELECT COUNT(*) FROM pending_mutations WHERE error_code IS NULL")
     fun observePendingCount(): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM pending_mutations WHERE error_code IS NOT NULL")
+    fun observeFailedCount(): Flow<Int>
+
+    @Query("SELECT * FROM pending_mutations WHERE error_code IS NOT NULL ORDER BY sequence")
+    suspend fun failed(): List<PendingMutationEntity>
+
+    /** Never sent: these may still be merged or dropped (docs/SYNC.md §6). */
+    @Query("SELECT * FROM pending_mutations WHERE sent = 0 AND error_code IS NULL ORDER BY sequence")
+    suspend fun unsent(): List<PendingMutationEntity>
+
+    /** Everything still waiting for [entityId], oldest first. */
+    @Query("SELECT * FROM pending_mutations WHERE entity_id = :entityId AND error_code IS NULL ORDER BY sequence")
+    suspend fun waitingFor(entityId: String): List<PendingMutationEntity>
+
+    @Query("SELECT COUNT(*) FROM pending_mutations WHERE entity_id = :entityId AND sent = 1 AND error_code IS NULL")
+    suspend fun sentCount(entityId: String): Int
+
+    /** Waiting or rejected: anything that shows the user changed this entity locally. */
+    @Query("SELECT COUNT(*) FROM pending_mutations WHERE entity_id = :entityId")
+    suspend fun countFor(entityId: String): Int
+
+    @Update
+    suspend fun update(mutation: PendingMutationEntity)
+
+    @Query("DELETE FROM pending_mutations WHERE sequence IN (:sequences)")
+    suspend fun deleteSequences(sequences: List<Long>)
+
+    @Query("DELETE FROM pending_mutations WHERE entity_id = :entityId")
+    suspend fun deleteFor(entityId: String)
 }
 
 @Dao
 interface SyncStateDao {
     @Query("SELECT * FROM sync_state WHERE id = 1")
     suspend fun get(): SyncStateEntity?
+
+    @Query("SELECT * FROM sync_state WHERE id = 1")
+    fun observe(): Flow<SyncStateEntity?>
 
     @Upsert
     suspend fun upsert(state: SyncStateEntity)

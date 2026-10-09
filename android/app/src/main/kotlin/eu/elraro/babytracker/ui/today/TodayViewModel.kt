@@ -8,6 +8,10 @@ import eu.elraro.babytracker.R
 import eu.elraro.babytracker.data.repository.BabyRepository
 import eu.elraro.babytracker.data.repository.EventRepository
 import eu.elraro.babytracker.data.repository.SaveResult
+import eu.elraro.babytracker.data.sync.SyncMonitor
+import eu.elraro.babytracker.data.sync.SyncOutcome
+import eu.elraro.babytracker.data.sync.SyncRunner
+import eu.elraro.babytracker.data.sync.SyncStatus
 import eu.elraro.babytracker.domain.Baby
 import eu.elraro.babytracker.domain.DiaperKind
 import eu.elraro.babytracker.domain.Event
@@ -25,6 +29,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -61,7 +66,18 @@ data class TodayUiState(
     val filter: EventType? = null,
     val editor: EditorState? = null,
     val message: TodayMessage? = null,
-)
+    val sync: SyncStatus = SyncStatus(),
+    /** A pull-to-refresh is running. */
+    val refreshing: Boolean = false,
+    /** The first download after signing in could not be completed. */
+    val firstSyncFailed: Boolean = false,
+) {
+    /**
+     * Nothing has been downloaded yet, so we cannot know whether the family already has a
+     * baby. Offering "add your baby" now could create a duplicate of the other parent's.
+     */
+    val awaitingFirstSync: Boolean get() = !loading && baby == null && sync.lastSuccessAt == null
+}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -71,12 +87,16 @@ class TodayViewModel
         private val babies: BabyRepository,
         private val events: EventRepository,
         private val time: TimeSource,
+        monitor: SyncMonitor,
+        private val sync: SyncRunner,
     ) : ViewModel() {
         /** null follows the calendar: the screen moves to the new day at midnight. */
         private val selectedDay = MutableStateFlow<LocalDate?>(null)
         private val filter = MutableStateFlow<EventType?>(null)
         private val editor = MutableStateFlow<EditorState?>(null)
         private val message = MutableStateFlow<TodayMessage?>(null)
+        private val refreshing = MutableStateFlow(false)
+        private val firstSyncFailed = MutableStateFlow(false)
 
         private val today: Flow<LocalDate> =
             flow {
@@ -112,7 +132,7 @@ class TodayViewModel
                 }
             }
 
-        val state: StateFlow<TodayUiState> =
+        private val screen: Flow<TodayUiState> =
             combine(tracking, filter, editor, message) { tracking, filter, editor, message ->
                 tracking.copy(
                     rows = tracking.rows.filter { filter == null || it.event.type == filter },
@@ -120,7 +140,36 @@ class TodayViewModel
                     editor = editor,
                     message = message,
                 )
+            }
+
+        val state: StateFlow<TodayUiState> =
+            combine(screen, monitor.status, refreshing, firstSyncFailed) { screen, status, refreshing, failed ->
+                screen.copy(sync = status, refreshing = refreshing, firstSyncFailed = failed)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), TodayUiState())
+
+        init {
+            viewModelScope.launch {
+                if (monitor.status.first().lastSuccessAt == null) firstSync()
+            }
+        }
+
+        /** The first download after signing in; the screen waits for it. */
+        fun firstSync() {
+            viewModelScope.launch {
+                firstSyncFailed.value = false
+                firstSyncFailed.value = sync.sync() != SyncOutcome.SUCCESS
+            }
+        }
+
+        /** Pull-to-refresh. */
+        fun refresh() {
+            if (refreshing.value) return
+            refreshing.value = true
+            viewModelScope.launch {
+                if (sync.sync() == SyncOutcome.RETRY) message.value = TodayMessage.Error(R.string.error_network)
+                refreshing.value = false
+            }
+        }
 
         private fun today(): LocalDate = time.now().atZone(time.zone()).toLocalDate()
 

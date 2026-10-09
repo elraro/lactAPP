@@ -2,7 +2,9 @@ package eu.elraro.babytracker.data.remote
 
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 /** Endpoints that do not need an access token. */
 interface AuthApi {
@@ -31,4 +33,18 @@ interface AuthApi {
 interface AccountApi {
     @POST("auth/logout")
     suspend fun logout()
+}
+
+/** The synchronization protocol of docs/SYNC.md. */
+interface SyncApi {
+    @GET("sync")
+    suspend fun pull(
+        @Query("cursor") cursor: String?,
+        @Query("limit") limit: Int,
+    ): PullResponse
+
+    @POST("sync/push")
+    suspend fun push(
+        @Body body: PushRequest,
+    ): PushResponse
 }

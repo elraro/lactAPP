@@ -144,4 +144,33 @@
     <string name="field_baby_name">Nombre del bebé</string>
     <string name="field_date_of_birth">Fecha de nacimiento</string>
     <string name="action_choose_date">Elegir fecha</string>
+
+    <!-- Synchronization -->
+    <string name="sync_first_title">Descargando los datos de tu familia…</string>
+    <string name="action_retry">Reintentar</string>
+    <plurals name="sync_pending">
+        <item quantity="one">%1$d cambio pendiente de subir</item>
+        <item quantity="many">%1$d de cambios pendientes de subir</item>
+        <item quantity="other">%1$d cambios pendientes de subir</item>
+    </plurals>
+    <plurals name="sync_failed">
+        <item quantity="one">El servidor ha rechazado %1$d cambio. Consulta Ajustes.</item>
+        <item quantity="many">El servidor ha rechazado %1$d de cambios. Consulta Ajustes.</item>
+        <item quantity="other">El servidor ha rechazado %1$d cambios. Consulta Ajustes.</item>
+    </plurals>
+    <string name="settings_sync">Sincronización</string>
+    <string name="sync_last">Última sincronización</string>
+    <string name="sync_never">Nunca</string>
+    <string name="sync_up_to_date">Todo está subido</string>
+    <string name="action_sync_now">Sincronizar ahora</string>
+    <string name="action_discard_failed">Descartar cambios rechazados</string>
+    <string name="discard_confirm_title">¿Descartar los cambios rechazados?</string>
+    <string name="discard_confirm_body">Los registros afectados volverán a lo que tiene el servidor.</string>
+    <string name="action_discard">Descartar</string>
+    <string name="sync_clock_warning">El reloj de este teléfono no coincide con el del servidor: la diferencia supera los dos minutos. Activa la fecha y hora automáticas para que los eventos se registren en el momento correcto.</string>
+    <plurals name="sign_out_pending">
+        <item quantity="one">%1$d cambio aún no se ha subido y se perderá.</item>
+        <item quantity="many">%1$d de cambios aún no se han subido y se perderán.</item>
+        <item quantity="other">%1$d cambios aún no se han subido y se perderán.</item>
+    </plurals>
 </resources>

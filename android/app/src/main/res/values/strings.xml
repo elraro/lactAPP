@@ -146,4 +146,30 @@
     <string name="field_baby_name">Baby\'s name</string>
     <string name="field_date_of_birth">Date of birth</string>
     <string name="action_choose_date">Choose date</string>
+
+    <!-- Synchronization -->
+    <string name="sync_first_title">Getting your family\'s data…</string>
+    <string name="action_retry">Try again</string>
+    <plurals name="sync_pending">
+        <item quantity="one">%1$d change waiting to upload</item>
+        <item quantity="other">%1$d changes waiting to upload</item>
+    </plurals>
+    <plurals name="sync_failed">
+        <item quantity="one">The server rejected %1$d change. See Settings.</item>
+        <item quantity="other">The server rejected %1$d changes. See Settings.</item>
+    </plurals>
+    <string name="settings_sync">Synchronization</string>
+    <string name="sync_last">Last synchronized</string>
+    <string name="sync_never">Never</string>
+    <string name="sync_up_to_date">Everything is uploaded</string>
+    <string name="action_sync_now">Sync now</string>
+    <string name="action_discard_failed">Discard rejected changes</string>
+    <string name="discard_confirm_title">Discard rejected changes?</string>
+    <string name="discard_confirm_body">The affected records go back to what the server has.</string>
+    <string name="action_discard">Discard</string>
+    <string name="sync_clock_warning">This phone\'s clock differs from the server\'s by more than two minutes. Turn on automatic date and time so that events are recorded at the right moment.</string>
+    <plurals name="sign_out_pending">
+        <item quantity="one">%1$d change has not been uploaded yet and will be lost.</item>
+        <item quantity="other">%1$d changes have not been uploaded yet and will be lost.</item>
+    </plurals>
 </resources>

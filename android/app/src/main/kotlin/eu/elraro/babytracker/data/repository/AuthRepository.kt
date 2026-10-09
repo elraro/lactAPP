@@ -13,6 +13,7 @@ import eu.elraro.babytracker.data.remote.apiCall
 import eu.elraro.babytracker.data.session.Account
 import eu.elraro.babytracker.data.session.SessionState
 import eu.elraro.babytracker.data.session.SessionStore
+import eu.elraro.babytracker.data.sync.SyncRequester
 import eu.elraro.babytracker.di.IoDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -37,6 +38,7 @@ class AuthRepository
         private val database: AppDatabase,
         private val json: Json,
         private val deviceName: DeviceName,
+        private val sync: SyncRequester,
         @param:IoDispatcher private val io: CoroutineDispatcher,
     ) {
         val sessionState: Flow<SessionState> = session.state
@@ -104,6 +106,8 @@ class AuthRepository
                             accessToken = response.accessToken,
                             refreshToken = response.refreshToken,
                         )
+                        // Upload anything recorded while the session was expired, and catch up.
+                        sync.requestSync()
                         ApiResult.Ok(Unit)
                     }
                 }

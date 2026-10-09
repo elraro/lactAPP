@@ -40,7 +40,8 @@ class EventRepositoryTest {
             .allowMainThreadQueries()
             .build()
     private val time = FakeTime()
-    private val repo = EventRepository(db, time)
+    private var syncRequests = 0
+    private val repo = EventRepository(db, time) { syncRequests++ }
     private val baby = "baby-1"
 
     @After
@@ -131,6 +132,8 @@ class EventRepositoryTest {
             assertEquals(diaper, repo.restore(diaper.id).event())
             assertEquals(diaper, repo.observeLatest(baby, EventType.DIAPER).first())
             assertEquals(listOf("upsert", "delete", "restore"), queue().map { it.op })
+            // Every change asks for a background sync.
+            assertEquals(3, syncRequests)
             assertEquals(SaveResult.NotFound, repo.restore("missing"))
         }
 
@@ -252,7 +255,7 @@ class EventRepositoryTest {
     @Test
     fun `a baby is created locally and queued`() =
         runTest {
-            val babies = BabyRepository(db, time)
+            val babies = BabyRepository(db, time) {}
             val created = babies.create(" Vera ", LocalDate.of(2026, 7, 1))
 
             assertEquals(listOf(created), babies.observeAll().first())

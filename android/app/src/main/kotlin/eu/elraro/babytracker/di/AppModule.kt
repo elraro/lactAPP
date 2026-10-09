@@ -19,10 +19,15 @@ import eu.elraro.babytracker.data.remote.AccountApi
 import eu.elraro.babytracker.data.remote.AuthApi
 import eu.elraro.babytracker.data.remote.PLACEHOLDER_BASE_URL
 import eu.elraro.babytracker.data.remote.ServerUrlInterceptor
+import eu.elraro.babytracker.data.remote.SyncApi
 import eu.elraro.babytracker.data.remote.TokenAuthenticator
 import eu.elraro.babytracker.data.repository.DeviceName
 import eu.elraro.babytracker.data.session.KeystoreCipher
 import eu.elraro.babytracker.data.session.SecretCipher
+import eu.elraro.babytracker.data.sync.SyncEngine
+import eu.elraro.babytracker.data.sync.SyncRequester
+import eu.elraro.babytracker.data.sync.SyncRunner
+import eu.elraro.babytracker.data.sync.SyncScheduler
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
@@ -53,6 +58,12 @@ annotation class AuthenticatedClient
 abstract class BindingsModule {
     @Binds
     abstract fun secretCipher(impl: KeystoreCipher): SecretCipher
+
+    @Binds
+    abstract fun syncRequester(impl: SyncScheduler): SyncRequester
+
+    @Binds
+    abstract fun syncRunner(impl: SyncEngine): SyncRunner
 }
 
 @Module
@@ -130,6 +141,13 @@ object NetworkModule {
         @AuthenticatedClient client: OkHttpClient,
         json: Json,
     ): AccountApi = retrofit(client, json).create(AccountApi::class.java)
+
+    @Provides
+    @Singleton
+    fun syncApi(
+        @AuthenticatedClient client: OkHttpClient,
+        json: Json,
+    ): SyncApi = retrofit(client, json).create(SyncApi::class.java)
 
     fun retrofit(
         client: OkHttpClient,

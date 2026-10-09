@@ -50,6 +50,7 @@ class AuthRepositoryTest {
             assertEquals("Casa", state.account.familyName)
             assertEquals(backend.serverUrl, state.account.serverUrl)
             assertEquals("access-1", backend.session.accessToken())
+            assertEquals(1, backend.syncRequests)
         }
 
     @Test

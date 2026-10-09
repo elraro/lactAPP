@@ -5,8 +5,12 @@ import androidx.test.core.app.ApplicationProvider
 import eu.elraro.babytracker.FakeTime
 import eu.elraro.babytracker.R
 import eu.elraro.babytracker.data.local.AppDatabase
+import eu.elraro.babytracker.data.local.SyncStateEntity
 import eu.elraro.babytracker.data.repository.BabyRepository
 import eu.elraro.babytracker.data.repository.EventRepository
+import eu.elraro.babytracker.data.sync.SyncMonitor
+import eu.elraro.babytracker.data.sync.SyncOutcome
+import eu.elraro.babytracker.data.sync.SyncRunner
 import eu.elraro.babytracker.domain.DiaperKind
 import eu.elraro.babytracker.domain.EventType
 import eu.elraro.babytracker.domain.SleepKind
@@ -49,7 +53,24 @@ class TodayViewModelTest {
 
     // 10:15 on 8 October 2026 in Madrid.
     private val time = FakeTime(now = Instant.parse("2026-10-08T08:15:00Z"))
-    private val babies = BabyRepository(db, time)
+    private val babies = BabyRepository(db, time) {}
+
+    /** Stands in for the engine: a "sync" succeeds or fails as the test says, and is counted. */
+    private val runner =
+        object : SyncRunner {
+            var outcome = SyncOutcome.SUCCESS
+            var runs = 0
+
+            override suspend fun sync(): SyncOutcome {
+                runs++
+                if (outcome == SyncOutcome.SUCCESS) {
+                    db.syncStateDao().upsert(SyncStateEntity(cursor = "c", lastSuccessAt = 1, serverTimeOffsetMs = 0))
+                }
+                return outcome
+            }
+
+            override suspend fun discardFailed() = Unit
+        }
 
     // Created in setUp: a view model binds its scope to Dispatchers.Main when constructed.
     private lateinit var vm: TodayViewModel
@@ -61,7 +82,7 @@ class TodayViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(Dispatchers.Unconfined)
-        vm = TodayViewModel(babies, EventRepository(db, time), time)
+        vm = TodayViewModel(babies, EventRepository(db, time) {}, time, SyncMonitor(db), runner)
     }
 
     @After
@@ -82,9 +103,51 @@ class TodayViewModelTest {
         withTimeout(AWAIT_TIMEOUT_MS) { vm.state.first(predicate) }
 
     @Test
+    fun `after signing in the screen waits for the first download before asking for a baby`() =
+        runBlocking {
+            runner.outcome = SyncOutcome.RETRY
+            vm = TodayViewModel(babies, EventRepository(db, time) {}, time, SyncMonitor(db), runner)
+
+            // Offline: we cannot know whether the other parent already added the baby.
+            val waiting = await { it.firstSyncFailed }
+            assertTrue(waiting.awaitingFirstSync)
+
+            runner.outcome = SyncOutcome.SUCCESS
+            vm.firstSync()
+            val ready = await { !it.loading && !it.awaitingFirstSync }
+            assertNull(ready.baby)
+            assertFalse(ready.firstSyncFailed)
+        }
+
+    @Test
+    fun `pull to refresh syncs and reports when the server cannot be reached`() =
+        runBlocking {
+            startWithBaby()
+            val before = runner.runs
+
+            vm.refresh()
+            await { !it.refreshing && runner.runs == before + 1 }
+            assertNull(vm.state.value.message)
+
+            runner.outcome = SyncOutcome.RETRY
+            vm.refresh()
+            assertEquals(TodayMessage.Error(R.string.error_network), await { it.message != null }.message)
+        }
+
+    @Test
+    fun `changes waiting to upload are counted`() =
+        runBlocking {
+            startWithBaby()
+            vm.logBottle(120)
+            vm.logDiaper(DiaperKind.WET)
+            // The baby itself, the bottle and the diaper.
+            assertEquals(3, await { it.sync.pending == 3 }.sync.pending)
+        }
+
+    @Test
     fun `without a baby the screen asks for one`() =
         runBlocking {
-            val empty = await { !it.loading }
+            val empty = await { !it.loading && !it.awaitingFirstSync }
             assertNull(empty.baby)
 
             vm.createBaby("Vera", LocalDate.of(2026, 7, 1))

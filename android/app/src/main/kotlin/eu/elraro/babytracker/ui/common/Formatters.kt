@@ -35,6 +35,11 @@ class Formatters(
 
     fun date(day: LocalDate): String = date.format(day)
 
+    fun dateTime(instant: Instant): String {
+        val local = instant.atZone(zone)
+        return "${date.format(local)}, ${time.format(local)}"
+    }
+
     /** Time alone for [instant] on [day]; date and time when it falls on another day. */
     fun timeOn(
         instant: Instant,

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.outlined.LocalDrink
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -42,6 +43,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,13 +54,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.elraro.babytracker.R
+import eu.elraro.babytracker.data.sync.SyncStatus
 import eu.elraro.babytracker.domain.Event
 import eu.elraro.babytracker.domain.EventType
 import eu.elraro.babytracker.domain.TimelineKind
@@ -93,24 +98,30 @@ fun TodayScreen(
         val content = Modifier.padding(padding)
         when {
             state.loading -> Box(content.fillMaxSize())
+            state.awaitingFirstSync -> FirstSync(state.firstSyncFailed, viewModel::firstSync, content)
             state.baby == null -> AddBabyScreen(today = state.day, onSave = viewModel::createBaby, modifier = content)
             else ->
-                TodayContent(
-                    state = state,
-                    actions =
-                        TodayActions(
-                            onPreviousDay = viewModel::previousDay,
-                            onNextDay = viewModel::nextDay,
-                            onAddBottle = { sheet = QuickSheet.BOTTLE },
-                            onAddDiaper = { sheet = QuickSheet.DIAPER },
-                            onSleep = viewModel::startSleep,
-                            onWake = viewModel::endSleep,
-                            onAddPastSleep = { viewModel.openNew(EventType.SLEEP) },
-                            onFilter = viewModel::setFilter,
-                            onEdit = viewModel::openEdit,
-                        ),
+                PullToRefreshBox(
+                    isRefreshing = state.refreshing,
+                    onRefresh = viewModel::refresh,
                     modifier = content,
-                )
+                ) {
+                    TodayContent(
+                        state = state,
+                        actions =
+                            TodayActions(
+                                onPreviousDay = viewModel::previousDay,
+                                onNextDay = viewModel::nextDay,
+                                onAddBottle = { sheet = QuickSheet.BOTTLE },
+                                onAddDiaper = { sheet = QuickSheet.DIAPER },
+                                onSleep = viewModel::startSleep,
+                                onWake = viewModel::endSleep,
+                                onAddPastSleep = { viewModel.openNew(EventType.SLEEP) },
+                                onFilter = viewModel::setFilter,
+                                onEdit = viewModel::openEdit,
+                            ),
+                    )
+                }
         }
     }
 
@@ -174,6 +185,56 @@ private fun Messages(
     }
 }
 
+/** Waiting for the first download after signing in, or offering to retry it. */
+@Composable
+private fun FirstSync(
+    failed: Boolean,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(32.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        if (failed) {
+            Text(
+                text = stringResource(R.string.error_network),
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+            )
+            Button(onClick = onRetry, modifier = Modifier.heightIn(min = PrimaryActionHeight)) {
+                Text(stringResource(R.string.action_retry))
+            }
+        } else {
+            CircularProgressIndicator()
+            Text(
+                text = stringResource(R.string.sync_first_title),
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+/** A quiet line about changes that are not on the server yet; nothing when all is uploaded. */
+@Composable
+private fun SyncNotice(status: SyncStatus) {
+    if (status.failed > 0) {
+        Text(
+            text = pluralStringResource(R.plurals.sync_failed, status.failed, status.failed),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+        )
+    } else if (status.pending > 0) {
+        Text(
+            text = pluralStringResource(R.plurals.sync_pending, status.pending, status.pending),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
 data class TodayActions(
     val onPreviousDay: () -> Unit,
     val onNextDay: () -> Unit,
@@ -209,6 +270,7 @@ fun TodayContent(
                     style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.padding(top = 8.dp).semantics { heading() },
                 )
+                SyncNotice(state.sync)
                 FeedCard(state.lastBottle, formatters, today, actions.onAddBottle)
                 DiaperCard(state.lastDiaper, formatters, today, actions.onAddDiaper)
                 SleepCard(state, formatters, today, actions)
