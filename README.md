@@ -22,8 +22,8 @@ No public registration, no social features, no ads, no analytics.
 | 5 | Synchronization | done |
 | 6 | Statistics | done |
 | 7 | Sleep prediction | done |
-| 8 | AI | next |
-| 9 | Polish | not started |
+| 8 | AI | done |
+| 9 | Polish | next |
 
 ## Documentation
 
@@ -68,6 +68,15 @@ docker compose exec api /babytracker admin create-family \
 This prints a one-time code with which that parent chooses a password in the app.
 The second parent is invited from inside the app. A forgotten password is reset with
 `admin reset-password -email …`.
+
+### Optional: AI explanations
+
+Set `BT_AI_PROVIDER` (and the variables next to it in `.env.example`) to let the app
+explain the statistics in words. Leave it empty and the feature does not exist. Even
+when configured, nothing is sent to the provider until a parent switches it on in
+Settings, and what is sent is a summary of statistics — never names, notes or
+individual records. With `ollama` the model runs on your own machine. See
+[docs/AI.md](docs/AI.md).
 
 For HTTPS, point a DNS name at the host, set `BT_PUBLIC_HOSTNAME` and
 `BT_TRUSTED_PROXIES`, and start with `docker compose --profile proxy up -d`.

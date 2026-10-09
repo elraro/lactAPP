@@ -10,8 +10,8 @@ app (Kotlin, Compose), a single Go REST server, and PostgreSQL. Parents record
 bottles, diapers, sleep and measurements; the system derives statistics and a
 next-nap estimate; an optional AI explains those results.
 
-**Current phase:** 7 complete (backend; Android sign-in, tracking, sync, statistics,
-next-sleep estimate). Next: Phase 8 — AI. AI does not exist yet.
+**Current phase:** 8 complete (backend; Android sign-in, tracking, sync, statistics,
+next-sleep estimate, optional AI explanations). Next: Phase 9 — polish.
 Update this line when a phase completes.
 
 ## 2. Source of truth
@@ -48,7 +48,7 @@ Raw events → Deterministic statistics → Predictions / patterns → AI interp
 AGENTS.md  README.md  .env.example  docker-compose.yml
 docs/        the documents above
 server/      Go module: cmd/babytracker, internal/{config,httpapi,auth,syncsvc,store,apperr,testutil}, migrations/
-             plus internal/{stats,predict}; internal/ai arrives in Phase 8
+             plus internal/{stats,predict,ai}
 android/     Gradle project: app/ (UI, data, sync, DI), stats/ (pure Kotlin statistics engine)
 testdata/    stats/ golden fixtures shared by the Go and Kotlin engines
 deploy/      reverse proxy config, backup scripts
@@ -201,6 +201,12 @@ from a run with skips. Tools: `go install github.com/sqlc-dev/sqlc/cmd/sqlc@late
 - No data goes to an AI provider unless the operator configured one **and** the
   family enabled AI. The AI context never contains names, notes or raw event lists.
 - AI output must never diagnose; the prompt rules in docs/AI.md are mandatory.
+- `ai.Context` is the only thing a provider is ever sent. Do not add a field to it that
+  can carry a name, a date, free text, an identifier or an individual event; the tests
+  in `internal/ai` and `httpapi/ai_test.go` check a real request for such leaks.
+- A model answer is shown only after `ai.ParseAnalysis` accepted it. The phone never
+  calls a provider and never holds a provider key.
+- The Anthropic provider uses the official Go SDK; do not hand-roll HTTP for it.
 - Release builds forbid cleartext HTTP.
 
 ## 13. Testing requirements

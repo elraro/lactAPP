@@ -1,8 +1,8 @@
 # Architecture
 
 > **Status: APPROVED 2026-10-08.** The server (Phase 2), the Android foundation (Phase 3) and local tracking
-> (Phase 4), synchronization (Phase 5), statistics (Phase 6) and the next-sleep
-> estimate (Phase 7) are implemented.
+> (Phase 4), synchronization (Phase 5), statistics (Phase 6), the next-sleep
+> estimate (Phase 7) and optional AI explanations (Phase 8) are implemented.
 > Section 10 records the decisions that were taken.
 
 ## 1. Guiding principle
@@ -89,7 +89,8 @@ internal/apperr/        error type with the stable codes of API.md
 internal/testutil/      throwaway PostgreSQL database per test
 internal/stats/         (Phase 6) pure functions over []Event — no DB, no clock, no I/O
 internal/predict/       next-sleep estimate — pure, depends on stats
-internal/ai/            (Phase 8) AIProvider interface, providers, context builder, prompt
+internal/ai/            Provider interface, Anthropic and OpenAI-compatible providers,
+                        context builder, prompt, answer validation, service
 internal/store/         sqlc-generated queries + thin transaction helpers
 migrations/             goose SQL
 ```

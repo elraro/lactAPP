@@ -187,7 +187,7 @@ CREATE TABLE applied_mutations (                  -- idempotency log
   PRIMARY KEY (family_id, mutation_id)
 );
 
-CREATE TABLE ai_analyses (                        -- Phase 8, not created yet
+CREATE TABLE ai_analyses (                        -- migration 00002
   id           uuid PRIMARY KEY,
   family_id    uuid        NOT NULL REFERENCES families(id),
   baby_id      uuid        NOT NULL,

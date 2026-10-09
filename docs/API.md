@@ -1,7 +1,6 @@
 # REST API
 
-> **Status: APPROVED 2026-10-08.** §1–5 and §7 are implemented; AI (§6) is specified for Phase 8
-> and returns 404 until then.
+> **Status: APPROVED 2026-10-08.** All sections are implemented.
 
 Base path `/api/v1`. JSON only (`Content-Type: application/json`). HTTPS only in
 production.
@@ -159,9 +158,12 @@ data"; the app renders a localized message.
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/ai/status` | `{ "configured": true, "enabled": false, "provider": "anthropic", "remaining_today": 20 }` |
-| POST | `/ai/analyses` | `{ "baby_id", "kind": "overview\|sleep\|feeding", "days": 7\|14\|30, "locale": "es" }` |
-| GET | `/ai/analyses?baby_id=` | Previous analyses (most recent first) |
+| GET | `/ai/status` | `{ "configured": true, "enabled": false, "provider": "anthropic", "model": "…", "remaining_today": 20 }` |
+| POST | `/ai/analyses` | `{ "baby_id", "kind": "overview\|sleep\|feeding", "days": 7\|14\|30, "locale": "en\|es" }` → the analysis: `{ id, baby_id, kind, days, locale, provider, model, created_at, cached, result: { observations: [{text, refs}], interpretation: [{text}], suggestions: [{text}] } }`. May take up to a few minutes. |
+| GET | `/ai/analyses?baby_id=` | The 20 most recent analyses of the baby |
+
+`429 rate_limited` when the family's allowance is used up; `502 ai_provider_error` when
+the provider fails or its answer does not pass validation.
 
 Returns `403 ai_not_configured` if the operator set no provider and
 `403 ai_disabled` if the family has not enabled AI. Details: [AI.md](AI.md).
