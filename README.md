@@ -19,8 +19,8 @@ No public registration, no social features, no ads, no analytics.
 | 2 | Backend foundation | done |
 | 3 | Android foundation | done |
 | 4 | Core tracking | done |
-| 5 | Synchronization | next |
-| 6 | Statistics | not started |
+| 5 | Synchronization | done |
+| 6 | Statistics | next |
 | 7 | Sleep prediction | not started |
 | 8 | AI | not started |
 | 9 | Polish | not started |

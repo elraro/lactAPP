@@ -1,7 +1,7 @@
 # Synchronization protocol
 
-> **Status: APPROVED 2026-10-08.** Server side implemented in `server/internal/syncsvc`
-> (Phase 2); the Android side is Phase 5.
+> **Status: APPROVED 2026-10-08.** Server side: `server/internal/syncsvc`. Android side:
+> `android/app/.../data/sync` (engine, coalescer, scheduler, monitor). Both implemented.
 
 ## 1. Model in one paragraph
 
@@ -54,9 +54,11 @@ GET /api/v1/sync?cursor=<opaque>&limit=500
 - Applying a change is an upsert by `id`, ignored if the local row already has an
   equal or higher `version`.
 - **Epoch mismatch** (server restored from backup): `410 cursor_expired`. The
-  client clears its cursor, pulls from zero, and reconciles: rows it holds that
-  are `synced` but absent from the fresh snapshot are removed; rows with pending
-  mutations are kept and re-pushed.
+  client clears its cursor, pulls from zero, and reconciles in the same transaction
+  as the last page: rows the server once confirmed but that are absent from the fresh
+  snapshot are removed — unless they carry local changes the server never confirmed
+  (queued or rejected). Those, and events that were never uploaded, are queued again
+  as new rows in their current state, **babies before their events**, and pushed at once.
 
 ## 4. Push
 
@@ -160,9 +162,11 @@ entity change.
 
 **Coalescing before send** (keeps batches small and avoids pointless traffic):
 
-- create + later updates of the same entity → one create with the final fields;
-- create + delete, both unsent → both dropped, nothing is sent;
-- consecutive updates → one update, union of fields, earliest `base_version`.
+- An entity the server has never been told about (local `version` 0, nothing of it
+  already sent) collapses to its current state: **one create** with all its fields, or
+  **nothing at all** if it was deleted again. This also covers "create, delete, undo".
+- For an entity the server knows: delete + restore cancel out; consecutive updates
+  become one update with the union of fields and the earliest `base_version`.
 
 Coalescing happens only among mutations that have **never been sent**; a mutation
 that was sent (even if the response was lost) keeps its `mutation_id` and content
@@ -189,7 +193,8 @@ user's unsynced edit does not flicker away.
 |---|---|
 | No network / timeout / 5xx / 429 | Whole batch stays queued. Exponential backoff 30 s → 1 h (WorkManager), reset on connectivity change or user action. Safe because of §4 step 1. |
 | 401 | Refresh token once, retry. If refresh fails with `invalid_grant`: stop syncing, keep all local data and the queue, show the login screen. After login the queue drains. |
-| Per-mutation `rejected` | Mutation → `failed`, entity `sync_status = failed`. The timeline shows a marker; tapping offers *Retry as new* or *Discard local change*. `entity_deleted` auto-resolves by applying the tombstone. |
+| Per-mutation `rejected` | The mutation is kept, marked with its error code, and never sent again. Today shows "the server rejected N changes"; Settings offers *Discard rejected changes*, which drops them and downloads the server's version of those records. `entity_deleted` resolves by itself: the local row is tombstoned and the mutation removed. |
+| Whole request refused (400, 413) | The batch is marked rejected as above, so one malformed batch cannot block the queue forever. |
 | Partial batch (some applied, response lost) | Retry of the same batch: applied ones return their stored result, the rest are applied now. |
 | App killed mid-pull | Cursor only advanced for committed pages; next cycle continues. |
 
@@ -215,6 +220,23 @@ intervals intersect; an open session counts as extending to "now".
 4. **Statistics** always use the union of intervals, so an unresolved overlap
    never double-counts sleep. Two open sessions are treated as one that began at
    the earlier start.
+
+### Triggers (Android)
+
+| Trigger | Mechanism |
+|---|---|
+| After any local change, and after signing in | WorkManager unique one-time work, 2 s debounce, network required, exponential backoff from 30 s |
+| App visible | A cycle on resume and every 30 s (`AppViewModel.syncWhileVisible`) |
+| App closed | WorkManager periodic work every 15 min, network required |
+| User | Pull-to-refresh on Today; *Sync now* in Settings |
+
+Background work is scheduled while a session exists and cancelled on sign-out.
+
+### First synchronization
+
+Until one cycle has completed, Today shows "getting your family's data" instead of
+the add-baby form: before the first download the app cannot know whether the other
+parent already created the baby, and asking would create a duplicate.
 
 ## 8. Required tests
 

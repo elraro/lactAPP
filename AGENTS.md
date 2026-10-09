@@ -10,10 +10,8 @@ app (Kotlin, Compose), a single Go REST server, and PostgreSQL. Parents record
 bottles, diapers, sleep and measurements; the system derives statistics and a
 next-nap estimate; an optional AI explains those results.
 
-**Current phase:** 4 complete (backend; Android sign-in and local tracking of bottles,
-diapers and sleep with timeline and editing). Next: Phase 5 — synchronization. Changes are
-queued in `pending_mutations` but **nothing is uploaded or downloaded yet**; statistics,
-prediction and AI do not exist.
+**Current phase:** 5 complete (backend; Android sign-in, tracking and two-way sync).
+Next: Phase 6 — statistics. Statistics, prediction and AI do not exist yet.
 Update this line when a phase completes.
 
 ## 2. Source of truth
@@ -148,6 +146,11 @@ from a run with skips. Tools: `go install github.com/sqlc-dev/sqlc/cmd/sqlc@late
 - Deletes are tombstones. Never physically delete syncable rows.
 - The pull cursor is stored in the same transaction that applies the page.
 - Never implement "download everything and replace the local database".
+- Only `SyncEngine` talks to the sync endpoints, and only `Coalescer` rewrites the queue —
+  and only rows with `sent = 0`.
+- Client sync behaviour is tested with two `TestDevice`s against `FakeSyncServer`
+  (`src/test/.../sync`). If the protocol changes, change the Go server, its API tests,
+  the fake server and docs/SYNC.md together.
 
 ## 10. Localization rules
 

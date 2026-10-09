@@ -1,8 +1,8 @@
 # Architecture
 
 > **Status: APPROVED 2026-10-08.** The server (Phase 2), the Android foundation (Phase 3) and local tracking
-> (Phase 4: bottles, diapers, sleep, timeline, editing — stored and queued on the
-> device, not yet uploaded) are implemented.
+> (Phase 4) and synchronization (Phase 5) are implemented: two phones of a family
+> converge through the server.
 > Section 10 records the decisions that were taken.
 
 ## 1. Guiding principle
@@ -136,7 +136,8 @@ data/local/        Room entities, DAOs
 data/remote/       Retrofit API, DTOs, ApiResult, interceptors, token authenticator
 data/session/      SessionStore (DataStore) and the Keystore cipher for tokens
 data/repository/   AuthRepository, EventRepository, BabyRepository, mutation building
-data/sync/         (Phase 5) SyncEngine, SyncWorker, mutation queue, rebase logic
+data/sync/         SyncEngine (push, pull, rebase, recovery), Coalescer, SyncScheduler
+                   (WorkManager), SyncMonitor (status for the UI)
 di/                Hilt modules
 ```
 
