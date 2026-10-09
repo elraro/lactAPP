@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"babytracker/internal/ai"
 	"babytracker/internal/apperr"
 	"babytracker/internal/auth"
 	"babytracker/internal/store"
@@ -26,6 +27,7 @@ type Deps struct {
 	Pool           *pgxpool.Pool
 	Auth           *auth.Service
 	Sync           *syncsvc.Service
+	AI             *ai.Service
 	Issuer         *auth.TokenIssuer
 	Logger         *slog.Logger
 	Now            func() time.Time
@@ -77,6 +79,10 @@ func New(d Deps) http.Handler {
 	mux.HandleFunc("GET "+v1+"/babies/{id}/stats", s.authed(s.handleStats))
 	mux.HandleFunc("GET "+v1+"/babies/{id}/predictions/next-sleep", s.authed(s.handleNextSleep))
 
+	mux.HandleFunc("GET "+v1+"/ai/status", s.authed(s.handleAIStatus))
+	mux.HandleFunc("GET "+v1+"/ai/analyses", s.authed(s.handleListAnalyses))
+	mux.HandleFunc("POST "+v1+"/ai/analyses", s.authed(s.handleCreateAnalysis))
+
 	mux.HandleFunc("GET "+v1+"/sync", s.authed(s.handlePull))
 	mux.HandleFunc("POST "+v1+"/sync/push", s.authed(s.handlePush))
 
@@ -106,6 +112,9 @@ type statusRecorder struct {
 	http.ResponseWriter
 	status int
 }
+
+// Unwrap lets http.ResponseController reach the real writer (per-request deadlines).
+func (r *statusRecorder) Unwrap() http.ResponseWriter { return r.ResponseWriter }
 
 func (r *statusRecorder) WriteHeader(code int) {
 	r.status = code

@@ -74,6 +74,7 @@ func TestProtectedRoutesRequireValidToken(t *testing.T) {
 		{"GET", "/babies"}, {"GET", "/babies/" + id}, {"GET", "/babies/" + id + "/events"},
 		{"GET", "/babies/" + id + "/stats"}, {"GET", "/babies/" + id + "/predictions/next-sleep"},
 		{"GET", "/sync"}, {"POST", "/sync/push"},
+		{"GET", "/ai/status"}, {"GET", "/ai/analyses"}, {"POST", "/ai/analyses"},
 		{"POST", "/auth/logout"}, {"POST", "/auth/password"}, {"POST", "/auth/invites"},
 	}
 	expired := *a

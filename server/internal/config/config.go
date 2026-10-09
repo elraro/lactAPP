@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/netip"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -18,6 +19,12 @@ type Config struct {
 	AccessTokenTTL  time.Duration
 	RefreshTokenTTL time.Duration
 	TrustedProxies  []netip.Prefix
+	// AI is optional: an empty AIProvider means the feature does not exist on this server.
+	AIProvider   string
+	AIModel      string
+	AIAPIKey     string
+	AIBaseURL    string
+	AIDailyLimit int
 }
 
 func (c Config) Production() bool { return c.Env == "production" }
@@ -48,7 +55,16 @@ func Load(getenv func(string) string) (Config, error) {
 		JWTSigningKey:   []byte(get("BT_JWT_SIGNING_KEY", "")),
 		AccessTokenTTL:  duration("BT_ACCESS_TOKEN_TTL", "15m"),
 		RefreshTokenTTL: duration("BT_REFRESH_TOKEN_TTL", "2160h"),
+		AIProvider:      get("BT_AI_PROVIDER", ""),
+		AIModel:         get("BT_AI_MODEL", ""),
+		AIAPIKey:        get("BT_AI_API_KEY", ""),
+		AIBaseURL:       get("BT_AI_BASE_URL", ""),
 	}
+	limit, err := strconv.Atoi(get("BT_AI_DAILY_LIMIT_PER_FAMILY", "20"))
+	if err != nil || limit < 0 {
+		errs = append(errs, errors.New("BT_AI_DAILY_LIMIT_PER_FAMILY: must be a non-negative number"))
+	}
+	c.AIDailyLimit = limit
 	if c.Env != "development" && c.Env != "production" {
 		errs = append(errs, errors.New("BT_ENV: must be development or production"))
 	}

@@ -10,6 +10,21 @@ import (
 	"github.com/google/uuid"
 )
 
+type AiAnalysis struct {
+	ID          uuid.UUID
+	FamilyID    uuid.UUID
+	BabyID      uuid.UUID
+	Kind        string
+	RangeDays   int32
+	Locale      string
+	Provider    string
+	Model       string
+	ContextHash []byte
+	Result      []byte
+	CreatedBy   uuid.UUID
+	CreatedAt   time.Time
+}
+
 type AppliedMutation struct {
 	FamilyID   uuid.UUID
 	MutationID uuid.UUID

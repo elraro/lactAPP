@@ -31,6 +31,11 @@ services:
       BT_ACCESS_TOKEN_TTL: ${BT_ACCESS_TOKEN_TTL:-15m}
       BT_REFRESH_TOKEN_TTL: ${BT_REFRESH_TOKEN_TTL:-2160h}
       BT_TRUSTED_PROXIES: ${BT_TRUSTED_PROXIES:-}
+      BT_AI_PROVIDER: ${BT_AI_PROVIDER:-}
+      BT_AI_MODEL: ${BT_AI_MODEL:-}
+      BT_AI_API_KEY: ${BT_AI_API_KEY:-}
+      BT_AI_BASE_URL: ${BT_AI_BASE_URL:-}
+      BT_AI_DAILY_LIMIT_PER_FAMILY: ${BT_AI_DAILY_LIMIT_PER_FAMILY:-20}
     ports:
       # Loopback only: plain HTTP must not be reachable from the network.
       - "127.0.0.1:8080:8080"

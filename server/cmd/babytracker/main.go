@@ -16,6 +16,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"babytracker/internal/ai"
 	"babytracker/internal/apperr"
 	"babytracker/internal/auth"
 	"babytracker/internal/config"
@@ -101,10 +102,19 @@ func serve(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 
+	provider, err := ai.NewProvider(ai.Settings{Provider: cfg.AIProvider, Model: cfg.AIModel, APIKey: cfg.AIAPIKey, BaseURL: cfg.AIBaseURL})
+	if err != nil {
+		return fmt.Errorf("configuration:\n%w", err)
+	}
+	if provider != nil {
+		logger.Info("ai provider configured", "provider", provider.Name(), "model", provider.Model())
+	}
+	aiSvc := ai.NewService(provider, store.New(pool), cfg.AIDailyLimit, time.Now, logger)
+
 	srv := &http.Server{
 		Addr: cfg.HTTPAddr,
 		Handler: httpapi.New(httpapi.Deps{
-			Pool: pool, Auth: authSvc, Sync: syncsvc.NewService(pool, time.Now), Issuer: issuer,
+			Pool: pool, Auth: authSvc, Sync: syncsvc.NewService(pool, time.Now), AI: aiSvc, Issuer: issuer,
 			Logger: logger, Now: time.Now,
 			RateLimits: httpapi.DefaultRateLimits, TrustedProxies: cfg.TrustedProxies,
 		}),

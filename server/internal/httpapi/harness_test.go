@@ -16,13 +16,18 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"babytracker/internal/ai"
 	"babytracker/internal/auth"
 	"babytracker/internal/httpapi"
+	"babytracker/internal/store"
 	"babytracker/internal/syncsvc"
 	"babytracker/internal/testutil"
 )
 
-const testPassword = "a-long-enough-password"
+const (
+	testPassword     = "a-long-enough-password"
+	testAIDailyLimit = 3
+)
 
 type fakeClock struct {
 	mu  sync.Mutex
@@ -47,9 +52,47 @@ type env struct {
 	auth  *auth.Service
 	clock *fakeClock
 	srv   *httptest.Server
+	// model is the language model the server is configured with; tests script its answers.
+	model *fakeModel
 }
 
+// fakeModel stands in for a language-model provider and records what it was sent.
+type fakeModel struct {
+	mu       sync.Mutex
+	answers  []string // returned in order; the last one repeats
+	fail     bool
+	requests []ai.Request
+}
+
+func (m *fakeModel) Name() string  { return "fake" }
+func (m *fakeModel) Model() string { return "fake-1" }
+
+func (m *fakeModel) Analyze(_ context.Context, req ai.Request) (ai.Response, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.requests = append(m.requests, req)
+	if m.fail {
+		return ai.Response{}, ai.ErrProvider
+	}
+	answer := m.answers[min(len(m.requests), len(m.answers))-1]
+	return ai.Response{JSON: answer, InputTokens: 100, OutputTokens: 20}, nil
+}
+
+func (m *fakeModel) calls() int {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return len(m.requests)
+}
+
+const goodAnswer = `{"observations":[{"text":"The records cover seven days.","refs":["range.days"]}],"interpretation":[{"text":"This may suggest a steady rhythm."}],"suggestions":[]}`
+
 func newEnv(t *testing.T, limits httpapi.RateLimits) *env {
+	t.Helper()
+	return newEnvWithModel(t, limits, &fakeModel{answers: []string{goodAnswer}})
+}
+
+// newEnvWithModel starts a server with the given AI provider; nil means none is configured.
+func newEnvWithModel(t *testing.T, limits httpapi.RateLimits, model *fakeModel) *env {
 	t.Helper()
 	pool := testutil.NewPool(t)
 	clock := &fakeClock{now: time.Now().UTC().Truncate(time.Second)}
@@ -58,12 +101,18 @@ func newEnv(t *testing.T, limits httpapi.RateLimits) *env {
 	if err != nil {
 		t.Fatal(err)
 	}
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	var provider ai.Provider
+	if model != nil {
+		provider = model
+	}
 	srv := httptest.NewServer(httpapi.New(httpapi.Deps{
 		Pool: pool, Auth: authSvc, Sync: syncsvc.NewService(pool, clock.Now), Issuer: issuer,
-		Logger: slog.New(slog.NewTextHandler(io.Discard, nil)), Now: clock.Now, RateLimits: limits,
+		AI:     ai.NewService(provider, store.New(pool), testAIDailyLimit, clock.Now, logger),
+		Logger: logger, Now: clock.Now, RateLimits: limits,
 	}))
 	t.Cleanup(srv.Close)
-	return &env{t: t, pool: pool, auth: authSvc, clock: clock, srv: srv}
+	return &env{t: t, pool: pool, auth: authSvc, clock: clock, srv: srv, model: model}
 }
 
 // client is one signed-in device.
