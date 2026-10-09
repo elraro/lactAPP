@@ -3,6 +3,7 @@ package eu.elraro.babytracker.data.remote
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Query
 
@@ -33,6 +34,22 @@ interface AuthApi {
 interface AccountApi {
     @POST("auth/logout")
     suspend fun logout()
+}
+
+/** Optional AI explanations (docs/AI.md). Online only: consent is never queued. */
+interface AiApi {
+    @GET("ai/status")
+    suspend fun status(): AiStatusDto
+
+    @PATCH("family")
+    suspend fun setFamilyAi(
+        @Body body: FamilyPatchRequest,
+    )
+
+    @POST("ai/analyses")
+    suspend fun analyze(
+        @Body body: AnalysisRequest,
+    ): AnalysisDto
 }
 
 /** The synchronization protocol of docs/SYNC.md. */

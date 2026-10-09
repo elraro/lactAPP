@@ -257,4 +257,33 @@
     </plurals>
     <string name="prediction_overdue">Lleva más tiempo sin dormir de lo habitual</string>
     <string name="prediction_note">Es una estimación a partir de los registros, no un horario.</string>
+
+    <!-- AI explanations -->
+    <string name="settings_ai">Explicaciones con IA</string>
+    <string name="ai_switch">Explicar las estadísticas con IA</string>
+    <string name="ai_switch_summary">Para toda la familia. Desactivado por defecto.</string>
+    <string name="ai_not_configured">No disponible: el servidor de tu familia no tiene configurado ningún proveedor de IA.</string>
+    <string name="ai_status_unknown">Conéctate al servidor para ver este ajuste.</string>
+    <string name="ai_consent_title">¿Activar las explicaciones con IA?</string>
+    <string name="ai_consent_body">Cuando alguien de la familia pida una explicación, vuestro servidor enviará un resumen de las estadísticas (medias, totales, la estimación del próximo sueño y la edad del bebé en días) al proveedor de IA «%1$s».
+
+Nunca envía el nombre del bebé, la fecha de nacimiento, las notas ni los registros individuales.
+
+Las estadísticas las calcula siempre la aplicación, no la IA.</string>
+    <string name="action_turn_on">Activar</string>
+    <string name="ai_card_title">Explicación con IA</string>
+    <string name="ai_card_disabled">Activa las explicaciones con IA en Ajustes para obtener una breve explicación de estas estadísticas.</string>
+    <string name="ai_kind_overview">Resumen</string>
+    <string name="ai_kind_sleep">Sueño</string>
+    <string name="ai_kind_feeding">Alimentación</string>
+    <string name="action_explain">Explicar estas estadísticas</string>
+    <string name="ai_working">Escribiendo la explicación…</string>
+    <string name="ai_section_observations">Lo que muestran los registros</string>
+    <string name="ai_section_interpretation">Interpretación de la IA</string>
+    <string name="ai_section_suggestions">Cosas a tener en cuenta</string>
+    <string name="ai_generated_by">Escrito por una IA (%1$s) a partir de las estadísticas anteriores. Puede equivocarse.</string>
+    <string name="ai_disclaimer">Esto no es un consejo médico. Si algo te preocupa, consulta con tu pediatra.</string>
+    <string name="error_ai_limit">Se ha alcanzado el límite diario de explicaciones con IA. Vuelve a intentarlo mañana.</string>
+    <string name="error_ai_provider">El proveedor de IA no ha podido generar una explicación. Vuelve a intentarlo más tarde.</string>
+    <string name="error_ai_disabled">Las explicaciones con IA están desactivadas para tu familia.</string>
 </resources>

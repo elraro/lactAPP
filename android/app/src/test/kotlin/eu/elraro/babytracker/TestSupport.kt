@@ -7,7 +7,9 @@ import eu.elraro.babytracker.data.local.AppDatabase
 import eu.elraro.babytracker.data.remote.AccessTokenInterceptor
 import eu.elraro.babytracker.data.remote.ServerUrlInterceptor
 import eu.elraro.babytracker.data.remote.TokenAuthenticator
+import eu.elraro.babytracker.data.repository.AiRepository
 import eu.elraro.babytracker.data.repository.AuthRepository
+import eu.elraro.babytracker.data.session.Account
 import eu.elraro.babytracker.data.session.SecretCipher
 import eu.elraro.babytracker.data.session.SessionStore
 import eu.elraro.babytracker.di.NetworkModule
@@ -70,6 +72,17 @@ class TestBackend : AutoCloseable {
             TokenAuthenticator(session, { authApi }, json),
         )
     val accountApi = NetworkModule.accountApi(authenticatedClient, json)
+
+    val ai = AiRepository(NetworkModule.aiApi(authenticatedClient, json), json)
+
+    /** Signs in directly, for tests that are not about signing in. */
+    suspend fun signedIn() {
+        session.signIn(
+            Account(serverUrl, "user-1", "a@example.com", "Ana", "family-1", "Casa"),
+            "access-1",
+            "refresh-1",
+        )
+    }
 
     /** How often the code under test asked for a background sync. */
     var syncRequests = 0

@@ -251,4 +251,33 @@
     </plurals>
     <string name="prediction_overdue">Awake longer than usual</string>
     <string name="prediction_note">An estimate from past records, not a schedule.</string>
+
+    <!-- AI explanations -->
+    <string name="settings_ai">AI explanations</string>
+    <string name="ai_switch">Explain statistics with AI</string>
+    <string name="ai_switch_summary">For the whole family. Off by default.</string>
+    <string name="ai_not_configured">Not available: your family\'s server has no AI provider set up.</string>
+    <string name="ai_status_unknown">Connect to the server to see this setting.</string>
+    <string name="ai_consent_title">Turn on AI explanations?</string>
+    <string name="ai_consent_body">When someone in the family asks for an explanation, your server sends a summary of the statistics (averages, totals, the next-sleep estimate and the baby\'s age in days) to the AI provider \"%1$s\".
+
+It never sends the baby\'s name, the date of birth, notes or individual records.
+
+The statistics themselves are always calculated by the app, not by the AI.</string>
+    <string name="action_turn_on">Turn on</string>
+    <string name="ai_card_title">AI explanation</string>
+    <string name="ai_card_disabled">Turn on AI explanations in Settings to get a short explanation of these statistics.</string>
+    <string name="ai_kind_overview">Overview</string>
+    <string name="ai_kind_sleep">Sleep</string>
+    <string name="ai_kind_feeding">Feeding</string>
+    <string name="action_explain">Explain these statistics</string>
+    <string name="ai_working">Writing the explanation…</string>
+    <string name="ai_section_observations">What the records show</string>
+    <string name="ai_section_interpretation">AI interpretation</string>
+    <string name="ai_section_suggestions">Things to consider</string>
+    <string name="ai_generated_by">Written by AI (%1$s) from the statistics above. It can be wrong.</string>
+    <string name="ai_disclaimer">This is not medical advice. If something worries you, talk to your paediatrician.</string>
+    <string name="error_ai_limit">Today\'s limit of AI explanations has been reached. Try again tomorrow.</string>
+    <string name="error_ai_provider">The AI provider could not produce an explanation. Try again later.</string>
+    <string name="error_ai_disabled">AI explanations are turned off for your family.</string>
 </resources>

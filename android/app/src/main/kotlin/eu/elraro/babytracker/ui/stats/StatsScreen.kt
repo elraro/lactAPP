@@ -8,17 +8,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -36,7 +41,9 @@ import eu.elraro.babytracker.stats.Patterns
 import eu.elraro.babytracker.stats.Sleep
 import eu.elraro.babytracker.stats.WakeWindows
 import eu.elraro.babytracker.ui.common.EmptyState
+import eu.elraro.babytracker.ui.common.ErrorText
 import eu.elraro.babytracker.ui.common.Formatters
+import eu.elraro.babytracker.ui.common.PrimaryButton
 import eu.elraro.babytracker.ui.common.durationText
 import eu.elraro.babytracker.ui.common.rememberFormatters
 import java.time.Duration
@@ -53,7 +60,16 @@ fun StatsScreen(
     viewModel: StatsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    StatsContent(state, onRange = viewModel::setRange, modifier = modifier)
+    val ai by viewModel.ai.collectAsStateWithLifecycle()
+    // Explanations are written in the language the app is shown in.
+    val language = if (LocalConfiguration.current.locales[0].language == "es") "es" else "en"
+    LaunchedEffect(Unit) { viewModel.refreshAiStatus() }
+    StatsContent(
+        state = state,
+        onRange = viewModel::setRange,
+        modifier = modifier,
+        aiCard = { AiCard(ai, onKind = viewModel::setAiKind, onExplain = { viewModel.explain(language) }) },
+    )
 }
 
 @Composable
@@ -61,6 +77,7 @@ fun StatsContent(
     state: StatsUiState,
     onRange: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    aiCard: @Composable () -> Unit = {},
 ) {
     val formatters = rememberFormatters()
     Column(
@@ -87,10 +104,93 @@ fun StatsContent(
                 WakeWindowsCard(stats.wakeWindows)
                 PatternsCard(stats.patterns, formatters)
                 DiapersCard(stats.diapers, formatters)
+                aiCard()
             }
         }
     }
 }
+
+// ---- AI explanation ----
+
+/**
+ * The optional explanation. Hidden entirely when the server has no AI provider (or has not
+ * answered yet); a pointer to Settings when the family has not switched it on.
+ */
+@Composable
+private fun AiCard(
+    ai: AiUiState,
+    onKind: (String) -> Unit,
+    onExplain: () -> Unit,
+) {
+    val status = ai.status?.takeIf { it.configured } ?: return
+    StatsCard(R.string.ai_card_title) {
+        if (!status.enabled) {
+            Text(
+                text = stringResource(R.string.ai_card_disabled),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            return@StatsCard
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            StatsViewModel.AI_KINDS.forEach { kind ->
+                FilterChip(
+                    selected = ai.kind == kind,
+                    onClick = { onKind(kind) },
+                    enabled = !ai.working,
+                    label = { Text(stringResource(aiKindLabel(kind))) },
+                    modifier = Modifier.heightIn(min = 48.dp),
+                )
+            }
+        }
+        if (ai.working) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                Text(stringResource(R.string.ai_working), style = MaterialTheme.typography.bodyLarge)
+            }
+        } else {
+            PrimaryButton(text = R.string.action_explain, onClick = onExplain)
+        }
+        ai.error?.let { ErrorText(it) }
+        ai.analysis?.let { analysis ->
+            // Three labelled parts keep recorded facts, the AI's reading and suggestions apart.
+            AiSection(R.string.ai_section_observations, analysis.result.observations.map { it.text })
+            AiSection(R.string.ai_section_interpretation, analysis.result.interpretation.map { it.text })
+            AiSection(R.string.ai_section_suggestions, analysis.result.suggestions.map { it.text })
+            Text(
+                text = stringResource(R.string.ai_generated_by, analysis.provider),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        // Shown by the app whether or not the model mentions it.
+        Text(
+            text = stringResource(R.string.ai_disclaimer),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun AiSection(
+    @StringRes title: Int,
+    texts: List<String>,
+) {
+    if (texts.isEmpty()) return
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(stringResource(title), style = MaterialTheme.typography.titleMedium)
+        texts.forEach { Text(it, style = MaterialTheme.typography.bodyLarge) }
+    }
+}
+
+@StringRes
+private fun aiKindLabel(kind: String): Int =
+    when (kind) {
+        "sleep" -> R.string.ai_kind_sleep
+        "feeding" -> R.string.ai_kind_feeding
+        else -> R.string.ai_kind_overview
+    }
 
 // ---- building blocks ----
 

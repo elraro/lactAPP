@@ -16,6 +16,8 @@ fun ApiError.messageRes(): Int =
                 "rate_limited" -> R.string.error_rate_limited
                 "invite_expired" -> R.string.error_invite_expired
                 "email_taken" -> R.string.error_email_taken
+                "ai_disabled", "ai_not_configured" -> R.string.error_ai_disabled
+                "ai_provider_error" -> R.string.error_ai_provider
                 "validation_failed", "invalid_request" -> R.string.error_validation
                 else -> R.string.error_unexpected
             }

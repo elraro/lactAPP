@@ -16,6 +16,7 @@ import dagger.hilt.components.SingletonComponent
 import eu.elraro.babytracker.data.local.AppDatabase
 import eu.elraro.babytracker.data.remote.AccessTokenInterceptor
 import eu.elraro.babytracker.data.remote.AccountApi
+import eu.elraro.babytracker.data.remote.AiApi
 import eu.elraro.babytracker.data.remote.AuthApi
 import eu.elraro.babytracker.data.remote.PLACEHOLDER_BASE_URL
 import eu.elraro.babytracker.data.remote.ServerUrlInterceptor
@@ -149,6 +150,16 @@ object NetworkModule {
         json: Json,
     ): SyncApi = retrofit(client, json).create(SyncApi::class.java)
 
+    /** AI answers can take a couple of minutes; every other call keeps the short timeout. */
+    @Provides
+    @Singleton
+    fun aiApi(
+        @AuthenticatedClient client: OkHttpClient,
+        json: Json,
+    ): AiApi =
+        retrofit(client.newBuilder().readTimeout(AI_READ_TIMEOUT_S, TimeUnit.SECONDS).build(), json)
+            .create(AiApi::class.java)
+
     fun retrofit(
         client: OkHttpClient,
         json: Json,
@@ -162,4 +173,5 @@ object NetworkModule {
 
     private const val CONNECT_TIMEOUT_S = 10L
     private const val READ_TIMEOUT_S = 30L
+    private const val AI_READ_TIMEOUT_S = 180L
 }

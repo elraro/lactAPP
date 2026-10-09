@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
@@ -18,6 +19,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.elraro.babytracker.R
+import eu.elraro.babytracker.data.remote.AiStatusDto
 import eu.elraro.babytracker.data.session.Account
 import eu.elraro.babytracker.data.sync.SyncStatus
 import eu.elraro.babytracker.ui.common.PrimaryActionHeight
@@ -51,11 +54,13 @@ fun SettingsScreen(
     var language by remember { mutableStateOf(AppLanguage.current()) }
     val sync by viewModel.syncStatus.collectAsStateWithLifecycle()
     val syncing by viewModel.syncing.collectAsStateWithLifecycle()
+    val aiStatus by viewModel.aiStatus.collectAsStateWithLifecycle()
     SettingsContent(
         account = account,
         language = language,
         sync = sync,
         syncing = syncing,
+        aiStatus = aiStatus,
         actions =
             SettingsActions(
                 onLanguageChange = {
@@ -64,6 +69,7 @@ fun SettingsScreen(
                 },
                 onSyncNow = viewModel::syncNow,
                 onDiscardFailed = viewModel::discardFailed,
+                onAiEnabled = viewModel::setAiEnabled,
                 onSignOut = viewModel::signOut,
             ),
         modifier = modifier,
@@ -74,6 +80,7 @@ data class SettingsActions(
     val onLanguageChange: (AppLanguage) -> Unit,
     val onSyncNow: () -> Unit,
     val onDiscardFailed: () -> Unit,
+    val onAiEnabled: (Boolean) -> Unit,
     val onSignOut: () -> Unit,
 )
 
@@ -83,6 +90,7 @@ fun SettingsContent(
     language: AppLanguage,
     sync: SyncStatus,
     syncing: Boolean,
+    aiStatus: AiStatusDto?,
     actions: SettingsActions,
     modifier: Modifier = Modifier,
 ) {
@@ -102,6 +110,10 @@ fun SettingsContent(
 
         SectionTitle(R.string.settings_sync)
         SyncSection(sync, syncing, onSyncNow = actions.onSyncNow, onDiscard = { confirmDiscard = true })
+        HorizontalDivider()
+
+        SectionTitle(R.string.settings_ai)
+        AiSection(aiStatus, actions.onAiEnabled)
         HorizontalDivider()
 
         SectionTitle(R.string.settings_account)
@@ -173,6 +185,70 @@ fun SettingsContent(
             },
             dismissButton = {
                 TextButton(onClick = { confirmDiscard = false }) { Text(stringResource(R.string.action_cancel)) }
+            },
+        )
+    }
+}
+
+/**
+ * The family's consent to AI explanations. Turning it on shows exactly what is sent and to
+ * whom; turning it off needs no confirmation.
+ */
+@Composable
+private fun AiSection(
+    status: AiStatusDto?,
+    onEnabled: (Boolean) -> Unit,
+) {
+    var askConsent by rememberSaveable { mutableStateOf(false) }
+    if (status == null || !status.configured) {
+        Text(
+            text = stringResource(if (status == null) R.string.ai_status_unknown else R.string.ai_not_configured),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        return
+    }
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = PrimaryActionHeight)
+                .toggleable(
+                    value = status.enabled,
+                    role = Role.Switch,
+                    onValueChange = { on -> if (on) askConsent = true else onEnabled(false) },
+                ).padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.ai_switch), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = stringResource(R.string.ai_switch_summary),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Switch(checked = status.enabled, onCheckedChange = null)
+    }
+    if (askConsent) {
+        AlertDialog(
+            onDismissRequest = { askConsent = false },
+            title = { Text(stringResource(R.string.ai_consent_title)) },
+            text = { Text(stringResource(R.string.ai_consent_body, status.provider.orEmpty())) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        askConsent = false
+                        onEnabled(true)
+                    },
+                ) {
+                    Text(stringResource(R.string.action_turn_on))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { askConsent = false }) { Text(stringResource(R.string.action_cancel)) }
             },
         )
     }
