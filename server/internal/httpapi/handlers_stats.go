@@ -7,6 +7,7 @@ import (
 
 	"babytracker/internal/apperr"
 	"babytracker/internal/auth"
+	"babytracker/internal/predict"
 	"babytracker/internal/stats"
 	"babytracker/internal/store"
 )
@@ -94,6 +95,30 @@ func (s *server) handleStats(w http.ResponseWriter, r *http.Request, c auth.Clai
 		return err
 	}
 	out, err := stats.Compute(stats.Input{Timezone: tz, End: end, Days: days, Now: now, Events: events})
+	if err != nil {
+		return err
+	}
+	writeJSON(w, http.StatusOK, out)
+	return nil
+}
+
+func (s *server) handleNextSleep(w http.ResponseWriter, r *http.Request, c auth.Claims) error {
+	baby, err := s.babyFromPath(r, c)
+	if err != nil {
+		return err
+	}
+	fields := map[string]string{}
+	tz, _ := s.reportingZone(r, c, fields)
+	if len(fields) > 0 {
+		return apperr.Validation(fields)
+	}
+	now := s.Now()
+	from := now.AddDate(0, 0, -predict.LookbackDays).Add(-statsLookback)
+	events, err := s.statsEvents(r, baby, from, now.Add(time.Second))
+	if err != nil {
+		return err
+	}
+	out, err := predict.NextSleep(predict.Input{Timezone: tz, Now: now, Events: events})
 	if err != nil {
 		return err
 	}

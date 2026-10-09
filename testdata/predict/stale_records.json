@@ -1,0 +1,498 @@
+{
+ "input": {
+  "timezone": "Europe/Madrid",
+  "now": "2026-09-07T12:00:00Z",
+  "events": [
+   {
+    "id": "e00034",
+    "type": "sleep",
+    "started_at": "2026-09-01T18:05:00Z",
+    "ended_at": "2026-09-02T00:30:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "night"
+   },
+   {
+    "id": "e00035",
+    "type": "bottle",
+    "started_at": "2026-09-02T00:35:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 100,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00036",
+    "type": "sleep",
+    "started_at": "2026-09-02T00:53:00Z",
+    "ended_at": "2026-09-02T04:53:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "night"
+   },
+   {
+    "id": "e00037",
+    "type": "sleep",
+    "started_at": "2026-09-02T06:18:00Z",
+    "ended_at": "2026-09-02T07:16:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00038",
+    "type": "sleep",
+    "started_at": "2026-09-02T09:20:00Z",
+    "ended_at": "2026-09-02T10:36:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00039",
+    "type": "sleep",
+    "started_at": "2026-09-02T13:07:00Z",
+    "ended_at": "2026-09-02T13:29:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00040",
+    "type": "bottle",
+    "started_at": "2026-09-02T05:03:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 150,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00041",
+    "type": "bottle",
+    "started_at": "2026-09-02T08:11:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 130,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00042",
+    "type": "bottle",
+    "started_at": "2026-09-02T11:11:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 150,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00043",
+    "type": "bottle",
+    "started_at": "2026-09-02T14:24:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 120,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00044",
+    "type": "bottle",
+    "started_at": "2026-09-02T17:21:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 120,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00045",
+    "type": "diaper",
+    "started_at": "2026-09-02T16:13:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "dirty",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00046",
+    "type": "diaper",
+    "started_at": "2026-09-02T13:25:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "dirty",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00047",
+    "type": "diaper",
+    "started_at": "2026-09-02T12:53:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "wet",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00048",
+    "type": "diaper",
+    "started_at": "2026-09-02T05:08:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "wet",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00049",
+    "type": "diaper",
+    "started_at": "2026-09-02T06:19:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "dirty",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00050",
+    "type": "diaper",
+    "started_at": "2026-09-02T06:05:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "wet",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00051",
+    "type": "sleep",
+    "started_at": "2026-09-02T17:30:00Z",
+    "ended_at": "2026-09-03T05:12:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "night"
+   },
+   {
+    "id": "e00052",
+    "type": "sleep",
+    "started_at": "2026-09-03T06:36:00Z",
+    "ended_at": "2026-09-03T07:41:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00053",
+    "type": "sleep",
+    "started_at": "2026-09-03T09:34:00Z",
+    "ended_at": "2026-09-03T11:01:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00054",
+    "type": "sleep",
+    "started_at": "2026-09-03T13:09:00Z",
+    "ended_at": "2026-09-03T13:34:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00055",
+    "type": "bottle",
+    "started_at": "2026-09-03T05:28:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 150,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00056",
+    "type": "bottle",
+    "started_at": "2026-09-03T08:23:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 120,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00057",
+    "type": "bottle",
+    "started_at": "2026-09-03T11:25:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 120,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00058",
+    "type": "bottle",
+    "started_at": "2026-09-03T14:22:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 120,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00059",
+    "type": "bottle",
+    "started_at": "2026-09-03T17:08:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 160,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00060",
+    "type": "diaper",
+    "started_at": "2026-09-03T06:12:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "both",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00061",
+    "type": "diaper",
+    "started_at": "2026-09-03T16:59:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "wet",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00062",
+    "type": "diaper",
+    "started_at": "2026-09-03T12:20:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "wet",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00063",
+    "type": "diaper",
+    "started_at": "2026-09-03T05:43:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "dirty",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00064",
+    "type": "diaper",
+    "started_at": "2026-09-03T07:25:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "wet",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00065",
+    "type": "sleep",
+    "started_at": "2026-09-03T17:30:00Z",
+    "ended_at": "2026-09-04T01:25:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "night"
+   },
+   {
+    "id": "e00066",
+    "type": "bottle",
+    "started_at": "2026-09-04T01:30:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 90,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00067",
+    "type": "sleep",
+    "started_at": "2026-09-04T01:49:00Z",
+    "ended_at": "2026-09-04T05:19:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "night"
+   },
+   {
+    "id": "e00068",
+    "type": "sleep",
+    "started_at": "2026-09-04T06:57:00Z",
+    "ended_at": "2026-09-04T08:03:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00069",
+    "type": "sleep",
+    "started_at": "2026-09-04T09:55:00Z",
+    "ended_at": "2026-09-04T11:36:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00070",
+    "type": "sleep",
+    "started_at": "2026-09-04T14:04:00Z",
+    "ended_at": "2026-09-04T14:22:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00071",
+    "type": "bottle",
+    "started_at": "2026-09-04T05:35:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 150,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00072",
+    "type": "bottle",
+    "started_at": "2026-09-04T08:39:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 150,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00073",
+    "type": "bottle",
+    "started_at": "2026-09-04T11:32:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 120,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00074",
+    "type": "bottle",
+    "started_at": "2026-09-04T14:32:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 180,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00075",
+    "type": "bottle",
+    "started_at": "2026-09-04T17:52:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 120,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00076",
+    "type": "diaper",
+    "started_at": "2026-09-04T12:58:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "wet",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00077",
+    "type": "diaper",
+    "started_at": "2026-09-04T17:32:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "both",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00078",
+    "type": "diaper",
+    "started_at": "2026-09-04T08:58:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "both",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00079",
+    "type": "diaper",
+    "started_at": "2026-09-04T10:41:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "wet",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00080",
+    "type": "diaper",
+    "started_at": "2026-09-04T14:04:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": "wet",
+    "sleep_kind": null
+   },
+   {
+    "id": "e00081",
+    "type": "sleep",
+    "started_at": "2026-09-04T17:32:00Z",
+    "ended_at": "2026-09-05T04:54:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "night"
+   }
+  ]
+ },
+ "expected": {
+  "status": "insufficient_data",
+  "kind": null,
+  "window_start": null,
+  "window_end": null,
+  "point": null,
+  "confidence": null,
+  "overdue": null,
+  "basis": null
+ }
+}

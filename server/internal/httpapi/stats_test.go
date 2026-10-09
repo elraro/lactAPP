@@ -75,3 +75,51 @@ func TestStatsEndpoint(t *testing.T) {
 	status, body = a.do("GET", "/babies/"+baby+"/stats?days=91", nil)
 	expectError(t, status, body, http.StatusBadRequest, "validation_failed")
 }
+
+func TestNextSleepEndpoint(t *testing.T) {
+	e := newEnv(t, httpapi.RateLimits{})
+	// 07:20 in Madrid on 8 October 2026, twenty minutes after waking up.
+	e.clock.Advance(time.Date(2026, 10, 8, 5, 20, 0, 0, time.UTC).Sub(e.clock.Now()))
+	a := e.newFamily("a@example.com")
+	baby := a.createBaby()
+
+	status, body := a.do("GET", "/babies/"+baby+"/predictions/next-sleep", nil)
+	if status != http.StatusOK || body["status"] != "insufficient_data" || body["window_start"] != nil {
+		t.Fatalf("without records: %d %v", status, body)
+	}
+
+	// Six regular days: up at 07:00, a nap after 80–100 minutes, bedtime at 19:00.
+	var muts []map[string]any
+	sleep := func(start, end time.Time, kind string) {
+		muts = append(muts, mutation("event", uuid.Must(uuid.NewV7()).String(), "upsert", 0, map[string]any{
+			"baby_id": baby, "type": "sleep", "sleep_kind": kind, "timezone": "Europe/Madrid",
+			"started_at": start.Format(time.RFC3339), "ended_at": end.Format(time.RFC3339),
+		}))
+	}
+	for i, window := range []int{80, 85, 90, 95, 100, 90} {
+		wake := time.Date(2026, 10, 2+i, 5, 0, 0, 0, time.UTC)
+		sleep(wake.Add(-12*time.Hour), wake, "night")
+		nap := wake.Add(time.Duration(window) * time.Minute)
+		sleep(nap, nap.Add(time.Hour), "nap")
+	}
+	lastWake := time.Date(2026, 10, 8, 5, 0, 0, 0, time.UTC)
+	sleep(lastWake.Add(-12*time.Hour), lastWake, "night")
+	a.mustApply(muts...)
+
+	// The same case as predict.TestMorningEstimateByHand, through the database and HTTP.
+	status, body = a.do("GET", "/babies/"+baby+"/predictions/next-sleep", nil)
+	if status != http.StatusOK || body["status"] != "ok" {
+		t.Fatalf("estimate: %d %v", status, body)
+	}
+	if body["window_start"] != "2026-10-08T06:20:00Z" || body["window_end"] != "2026-10-08T06:40:00Z" ||
+		body["kind"] != "nap" || body["confidence"] != "moderate" || body["overdue"] != false {
+		t.Errorf("estimate = %v", body)
+	}
+	basis := body["basis"].(map[string]any)
+	if basis["sample_size"] != float64(6) || basis["sample_rule"] != "same_ordinal" || basis["p50_s"] != float64(5400) {
+		t.Errorf("basis = %v", basis)
+	}
+
+	status, body = a.do("GET", "/babies/"+baby+"/predictions/next-sleep?tz=Nowhere", nil)
+	expectError(t, status, body, http.StatusBadRequest, "validation_failed")
+}

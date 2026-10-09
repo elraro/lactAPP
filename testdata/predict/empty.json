@@ -1,0 +1,17 @@
+{
+ "input": {
+  "timezone": "Europe/Madrid",
+  "now": "2026-10-06T12:00:00Z",
+  "events": []
+ },
+ "expected": {
+  "status": "insufficient_data",
+  "kind": null,
+  "window_start": null,
+  "window_end": null,
+  "point": null,
+  "confidence": null,
+  "overdue": null,
+  "basis": null
+ }
+}

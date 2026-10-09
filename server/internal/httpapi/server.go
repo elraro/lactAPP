@@ -75,6 +75,7 @@ func New(d Deps) http.Handler {
 	mux.HandleFunc("GET "+v1+"/babies/{id}", s.authed(s.handleGetBaby))
 	mux.HandleFunc("GET "+v1+"/babies/{id}/events", s.authed(s.handleListEvents))
 	mux.HandleFunc("GET "+v1+"/babies/{id}/stats", s.authed(s.handleStats))
+	mux.HandleFunc("GET "+v1+"/babies/{id}/predictions/next-sleep", s.authed(s.handleNextSleep))
 
 	mux.HandleFunc("GET "+v1+"/sync", s.authed(s.handlePull))
 	mux.HandleFunc("POST "+v1+"/sync/push", s.authed(s.handlePush))

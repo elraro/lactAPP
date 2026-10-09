@@ -72,7 +72,7 @@ func TestProtectedRoutesRequireValidToken(t *testing.T) {
 		{"GET", "/me"}, {"GET", "/devices"}, {"DELETE", "/devices/" + id},
 		{"GET", "/family"}, {"PATCH", "/family"},
 		{"GET", "/babies"}, {"GET", "/babies/" + id}, {"GET", "/babies/" + id + "/events"},
-		{"GET", "/babies/" + id + "/stats"},
+		{"GET", "/babies/" + id + "/stats"}, {"GET", "/babies/" + id + "/predictions/next-sleep"},
 		{"GET", "/sync"}, {"POST", "/sync/push"},
 		{"POST", "/auth/logout"}, {"POST", "/auth/password"}, {"POST", "/auth/invites"},
 	}
