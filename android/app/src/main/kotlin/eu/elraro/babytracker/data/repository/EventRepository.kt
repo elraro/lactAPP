@@ -12,6 +12,7 @@ import eu.elraro.babytracker.domain.Ids
 import eu.elraro.babytracker.domain.SleepRules
 import eu.elraro.babytracker.domain.TimeSource
 import eu.elraro.babytracker.domain.problem
+import eu.elraro.babytracker.stats.StatEvent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.Instant
@@ -59,6 +60,27 @@ class EventRepository
             events
                 .observeTouching(babyId, from.toEpochMilli(), to.toEpochMilli())
                 .map { rows -> rows.mapNotNull { it.toDomain() } }
+
+        /** What the statistics engine needs for [from, to): see [StatEvent]. */
+        fun observeForStats(
+            babyId: String,
+            from: Instant,
+            to: Instant,
+        ): Flow<List<StatEvent>> =
+            events.observeTouching(babyId, from.toEpochMilli(), to.toEpochMilli()).map { rows ->
+                rows.map {
+                    StatEvent(
+                        id = it.id,
+                        type = it.type,
+                        startedAt = Instant.ofEpochMilli(it.startedAt),
+                        endedAt = it.endedAt?.let(Instant::ofEpochMilli),
+                        timezone = it.timezone,
+                        amountMl = it.amountMl,
+                        diaperKind = it.diaperKind,
+                        sleepKind = it.sleepKind,
+                    )
+                }
+            }
 
         fun observeLatest(
             babyId: String,

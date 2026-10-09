@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "babytracker"
 include(":app")
+include(":stats")

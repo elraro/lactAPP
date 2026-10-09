@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BarChart
-import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material3.Icon
@@ -27,8 +26,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import eu.elraro.babytracker.R
 import eu.elraro.babytracker.data.session.Account
-import eu.elraro.babytracker.ui.common.EmptyState
 import eu.elraro.babytracker.ui.settings.SettingsScreen
+import eu.elraro.babytracker.ui.stats.StatsScreen
 import eu.elraro.babytracker.ui.today.TodayScreen
 import kotlinx.serialization.Serializable
 
@@ -92,7 +91,7 @@ fun HomeScreen(account: Account) {
                 TodayScreen()
             }
             composable<StatisticsRoute> {
-                EmptyState(Icons.Outlined.Insights, R.string.stats_empty_title, R.string.stats_empty_body)
+                StatsScreen()
             }
             composable<SettingsRoute> {
                 SettingsScreen(account = account)

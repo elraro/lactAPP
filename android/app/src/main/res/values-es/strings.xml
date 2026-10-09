@@ -173,4 +173,72 @@
         <item quantity="many">%1$d de cambios aún no se han subido y se perderán.</item>
         <item quantity="other">%1$d cambios aún no se han subido y se perderán.</item>
     </plurals>
+
+    <!-- Statistics -->
+    <plurals name="stats_range_days">
+        <item quantity="one">%1$d día</item>
+        <item quantity="many">%1$d de días</item>
+        <item quantity="other">%1$d días</item>
+    </plurals>
+    <string name="stats_feeding">Alimentación</string>
+    <string name="stats_diapers">Pañales</string>
+    <string name="stats_wake_windows">Ventanas de vigilia</string>
+    <string name="stats_patterns">Patrones</string>
+    <string name="stats_today">Hoy</string>
+    <string name="stats_not_enough">Faltan datos</string>
+    <plurals name="stats_feeds">
+        <item quantity="one">%1$d toma</item>
+        <item quantity="many">%1$d de tomas</item>
+        <item quantity="other">%1$d tomas</item>
+    </plurals>
+    <plurals name="stats_naps">
+        <item quantity="one">%1$d siesta</item>
+        <item quantity="many">%1$d de siestas</item>
+        <item quantity="other">%1$d siestas</item>
+    </plurals>
+    <plurals name="stats_sample">
+        <item quantity="one">%1$d registro</item>
+        <item quantity="many">%1$d de registros</item>
+        <item quantity="other">%1$d registros</item>
+    </plurals>
+    <string name="stats_total_in_range">Total del periodo</string>
+    <string name="stats_avg_per_day">Media diaria</string>
+    <string name="stats_feeds_per_day">Tomas al día</string>
+    <string name="stats_amount_per_feed">Por toma</string>
+    <string name="stats_mean_and_median">%1$s de media · %2$s de mediana</string>
+    <string name="stats_time_between_feeds">Tiempo entre tomas</string>
+    <string name="stats_median_range">%1$s (normalmente %2$s – %3$s)</string>
+    <string name="stats_chart_daily_ml">Leche por día (ml)</string>
+    <string name="stats_chart_by_hour">Leche según la hora del día (ml)</string>
+    <string name="stats_chart_daily_diapers">Pañales por día</string>
+    <string name="stats_chart_daily_sleep">Sueño por día (horas)</string>
+    <string name="stats_chart_wake_histogram">Cuánto tiempo pasa despierto (minutos)</string>
+    <string name="stats_chart_description">%1$s. Mínimo %2$s, máximo %3$s.</string>
+    <string name="stats_diaper_breakdown">Pipí %1$d · Caca %2$d · Ambos %3$d</string>
+    <string name="stats_diapers_per_day">Pañales al día</string>
+    <string name="stats_sleep_total">Sueño total</string>
+    <string name="stats_sleep_night">Noche</string>
+    <string name="stats_sleep_day">Día</string>
+    <string name="stats_naps_per_day">Siestas al día</string>
+    <string name="stats_nap_duration">Duración de las siestas</string>
+    <string name="stats_longest_nap">Siesta más larga</string>
+    <string name="stats_nap_start">Inicio habitual de la siesta %1$d</string>
+    <string name="stats_wake_overall">Ventana de vigilia habitual</string>
+    <string name="stats_wake_ordinal">Ventana de vigilia %1$d</string>
+    <string name="stats_pattern_none">No se aprecia una relación clara entre la duración de una ventana de vigilia y la de la siesta siguiente.</string>
+    <string name="stats_pattern_longer">Las ventanas de vigilia más largas se asociaron con siestas posteriores más largas.</string>
+    <string name="stats_pattern_shorter">Las ventanas de vigilia más largas se asociaron con siestas posteriores más cortas.</string>
+    <string name="stats_strength_weak">Asociación débil</string>
+    <string name="stats_strength_moderate">Asociación moderada</string>
+    <string name="stats_strength_strong">Asociación fuerte</string>
+    <string name="stats_strength_and_sample">%1$s · %2$s</string>
+    <string name="stats_pattern_caution">Que dos cosas aparezcan asociadas en los registros no demuestra que una cause la otra.</string>
+    <string name="stats_nap_by_start">Siestas que empiezan entre %1$s y %2$s</string>
+    <string name="stats_nap_by_start_value">%1$s de mediana · %2$s</string>
+    <string name="stats_changes">Últimos 7 días frente a los 7 anteriores</string>
+    <string name="stats_change_wake">Ventana de vigilia habitual</string>
+    <string name="stats_change_nap">Duración habitual de las siestas</string>
+    <string name="stats_change_intake">Leche al día</string>
+    <string name="stats_change_sleep">Sueño al día</string>
+    <string name="stats_change_value">%1$s ahora · %2$s antes</string>
 </resources>

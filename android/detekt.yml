@@ -29,5 +29,8 @@ style:
   ReturnCount:
     # Early returns for validation and null checks are the house style.
     active: false
+  LoopWithTooManyJumpStatements:
+    # Same reason, for `continue`; the statistics loops also mirror the Go engine line by line.
+    active: false
   UnusedPrivateMember:
     ignoreAnnotated: ['Preview']

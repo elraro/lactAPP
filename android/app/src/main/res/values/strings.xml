@@ -172,4 +172,68 @@
         <item quantity="one">%1$d change has not been uploaded yet and will be lost.</item>
         <item quantity="other">%1$d changes have not been uploaded yet and will be lost.</item>
     </plurals>
+
+    <!-- Statistics -->
+    <plurals name="stats_range_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="stats_feeding">Feeding</string>
+    <string name="stats_diapers">Diapers</string>
+    <string name="stats_wake_windows">Wake windows</string>
+    <string name="stats_patterns">Patterns</string>
+    <string name="stats_today">Today</string>
+    <string name="stats_not_enough">Not enough data</string>
+    <plurals name="stats_feeds">
+        <item quantity="one">%1$d feed</item>
+        <item quantity="other">%1$d feeds</item>
+    </plurals>
+    <plurals name="stats_naps">
+        <item quantity="one">%1$d nap</item>
+        <item quantity="other">%1$d naps</item>
+    </plurals>
+    <plurals name="stats_sample">
+        <item quantity="one">%1$d record</item>
+        <item quantity="other">%1$d records</item>
+    </plurals>
+    <string name="stats_total_in_range">Total in this period</string>
+    <string name="stats_avg_per_day">Average per day</string>
+    <string name="stats_feeds_per_day">Feeds per day</string>
+    <string name="stats_amount_per_feed">Per feed</string>
+    <string name="stats_mean_and_median">%1$s average · %2$s median</string>
+    <string name="stats_time_between_feeds">Time between feeds</string>
+    <string name="stats_median_range">%1$s (usually %2$s – %3$s)</string>
+    <string name="stats_chart_daily_ml">Milk per day (ml)</string>
+    <string name="stats_chart_by_hour">Milk by time of day (ml)</string>
+    <string name="stats_chart_daily_diapers">Diapers per day</string>
+    <string name="stats_chart_daily_sleep">Sleep per day (hours)</string>
+    <string name="stats_chart_wake_histogram">How long the baby stays awake (minutes)</string>
+    <string name="stats_chart_description">%1$s. Lowest %2$s, highest %3$s.</string>
+    <string name="stats_diaper_breakdown">Wet %1$d · Dirty %2$d · Both %3$d</string>
+    <string name="stats_diapers_per_day">Diapers per day</string>
+    <string name="stats_sleep_total">Total sleep</string>
+    <string name="stats_sleep_night">Night</string>
+    <string name="stats_sleep_day">Daytime</string>
+    <string name="stats_naps_per_day">Naps per day</string>
+    <string name="stats_nap_duration">Nap length</string>
+    <string name="stats_longest_nap">Longest nap</string>
+    <string name="stats_nap_start">Usual start of nap %1$d</string>
+    <string name="stats_wake_overall">Typical wake window</string>
+    <string name="stats_wake_ordinal">Wake window %1$d</string>
+    <string name="stats_pattern_none">No clear relationship between the length of a wake window and the length of the nap that followed.</string>
+    <string name="stats_pattern_longer">Longer wake windows were associated with longer naps afterwards.</string>
+    <string name="stats_pattern_shorter">Longer wake windows were associated with shorter naps afterwards.</string>
+    <string name="stats_strength_weak">Weak association</string>
+    <string name="stats_strength_moderate">Moderate association</string>
+    <string name="stats_strength_strong">Strong association</string>
+    <string name="stats_strength_and_sample">%1$s · %2$s</string>
+    <string name="stats_pattern_caution">An association in the records does not show that one thing causes the other.</string>
+    <string name="stats_nap_by_start">Naps starting %1$s – %2$s</string>
+    <string name="stats_nap_by_start_value">%1$s median · %2$s</string>
+    <string name="stats_changes">Last 7 days compared with the 7 before</string>
+    <string name="stats_change_wake">Typical wake window</string>
+    <string name="stats_change_nap">Typical nap length</string>
+    <string name="stats_change_intake">Milk per day</string>
+    <string name="stats_change_sleep">Sleep per day</string>
+    <string name="stats_change_value">%1$s now · %2$s before</string>
 </resources>
