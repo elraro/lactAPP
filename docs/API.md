@@ -1,7 +1,7 @@
 # REST API
 
-> **Status: APPROVED 2026-10-08.** §1–4 and §7 are implemented; §5 (statistics) and §6 (AI)
-> are specified for Phases 6–8 and return 404 until then.
+> **Status: APPROVED 2026-10-08.** §1–5 (statistics) and §7 are implemented; prediction (§5) and
+> AI (§6) are specified for Phases 7–8 and return 404 until then.
 
 Base path `/api/v1`. JSON only (`Content-Type: application/json`). HTTPS only in
 production.
@@ -138,17 +138,18 @@ All take `tz` (IANA, default family zone). Definitions: [STATISTICS.md](STATISTI
 
 | Method | Path | Query |
 |---|---|---|
-| GET | `/babies/{id}/stats/feeding` | `days=7\|14\|30`, `end=YYYY-MM-DD` (default today) |
-| GET | `/babies/{id}/stats/diapers` | same |
-| GET | `/babies/{id}/stats/sleep` | same |
-| GET | `/babies/{id}/stats/wake-windows` | same |
-| GET | `/babies/{id}/stats/growth` | — |
-| GET | `/babies/{id}/predictions/next-sleep` | `at` (instant, default now) |
+| GET | `/babies/{id}/stats` | `days` (1–90, default 7), `end=YYYY-MM-DD` (default today in `tz`), `tz` |
+| GET | `/babies/{id}/predictions/next-sleep` | `tz` |
+
+One statistics call returns the whole bundle — `range`, `feeding`, `diapers`, `sleep`,
+`wake_windows`, `patterns` — because the screens show them together and they share
+the same pass over the events.
 
 Every metric is returned as an object that carries its own evidence:
 
 ```json
-{ "wake_window": { "median_s": 6120, "p25_s": 5460, "p75_s": 6900, "sample_size": 18 } }
+{ "wake_windows": { "overall": { "median": 6120, "p25": 5460, "p75": 6900, "min": 4800,
+                                 "max": 8100, "mean": 6204, "sample_size": 18 } } }
 ```
 
 `null` value with `sample_size` below the documented minimum means "not enough

@@ -1,6 +1,8 @@
 # Statistics and prediction
 
-> **Status: APPROVED 2026-10-08.** Not implemented yet.
+> **Status: APPROVED 2026-10-08.** §1–8 implemented in both engines (Phase 6); §9 prediction is Phase 7.
+> The exact output shape is the Go type `stats.Output` (`server/internal/stats/types.go`),
+> mirrored by `StatsOutput` in `android/stats`.
 
 ## 1. Rules
 
@@ -18,16 +20,19 @@
 
 ## 2. Numeric conventions (needed for cross-language equality)
 
-- Durations are integer **seconds**; volumes integer **ml**; weights **g**; lengths **mm**.
-- **Mean**: sum / n, rounded half-up to the unit.
+- Durations are integer **seconds**; volumes integer **ml**. Every result is an integer.
+  Per-day rates that need one decimal are reported in tenths (`*_x10`: 55 means 5.5).
+- **Mean**: `(2·sum + n) / (2·n)` in integer arithmetic, i.e. rounded half up.
 - **Percentile p** of sorted values `x[0..n-1]`: linear interpolation at rank
-  `h = (n − 1)·p` → `x[⌊h⌋] + (h − ⌊h⌋)·(x[⌈h⌉] − x[⌊h⌋])`, rounded half-up
-  (the "type 7" definition used by NumPy/R/Excel `PERCENTILE.INC`). Median = p50.
-- **Weighted percentile** (prediction only): sort by value, accumulate integer
-  weights, return the first value whose cumulative weight ≥ `p · total`. No
-  interpolation, integer arithmetic only.
-- Deleted events are ignored. Open sleep sessions are used for "today so far"
-  totals (clipped at `now`) and excluded from every duration distribution.
+  `(n − 1)·p/100` ("type 7", as in NumPy/R/Excel `PERCENTILE.INC`), computed with
+  integers and rounded half up. Median = p50.
+- **Spearman's ρ** is the one floating-point computation: average ranks for ties, then
+  Pearson on the ranks with the same operations in the same order in both engines,
+  reported as `ρ × 1000` rounded half away from zero.
+- Events are processed in order of start time, then ID. The order of the input does not
+  matter (tested).
+- Deleted events are not part of the input. Open sleep sessions count up to `now` in
+  per-day totals and are excluded from every duration distribution.
 
 ## 3. Days
 
@@ -38,7 +43,10 @@
 - Point events belong to the day containing `started_at`.
 - Interval events (sleep) contribute to each day the part of the interval that
   falls inside it.
-- **Time-of-day** metrics use each event's own `timezone`.
+- **Time-of-day of feeds** uses each event's own `timezone` (falling back to the
+  reporting zone if it is unknown), so travel does not smear the pattern.
+  **Time-of-day of naps** uses the reporting zone, because overlapping sessions recorded
+  by two phones are merged before analysis.
 
 ## 4. Feeding
 
@@ -55,10 +63,9 @@
 
 ## 5. Diapers
 
-Per day and over the range: total, wet, dirty, both. For "how many wet/dirty
-diapers" summaries a `both` diaper counts once in the total and once in each of
-*wet-inclusive* and *dirty-inclusive* counts; all five numbers are returned so the
-UI never has to guess. Daily trend = per-day series.
+Per day and over the range: `total`, `wet`, `dirty`, `both` — the kinds as recorded,
+each diaper counted once. Mean per day over complete days with at least one diaper
+(min 3 days). Daily trend = per-day series.
 
 ## 6. Sleep
 
@@ -72,9 +79,7 @@ metrics below use normalized sessions.
 | Night / day sleep per day | same, split by `sleep_kind` | — |
 | Naps per day | naps whose **start** is in the day; mean over complete days | 3 days |
 | Nap duration | mean, median, p25, p75, max over closed naps in range | 5 |
-| Average nap start time | circular mean of event-local start time-of-day, per nap ordinal (1st, 2nd, …) | 5 |
-| Night length | per night: first night-session start → last night-session end of the same night, and sleep time within it | 3 nights |
-| Night wakings | count of gaps between consecutive night sessions of the same night | 3 nights |
+| Average nap start time | arithmetic mean of the start time (minutes after local midnight), per nap ordinal within its day (1st … 5th). Naps are daytime sleep, so no wrap-around at midnight is needed | 5 |
 
 Two consecutive night sessions belong to the **same night** if the gap between
 them is < 4 h.
@@ -91,9 +96,11 @@ start of the next, classified by its neighbours:
 | nap → nap | wake window, ordinal = naps since morning wake + 1 |
 | nap → night | wake window, ordinal as above, flagged `before_bedtime` |
 
-Gaps longer than 16 h are discarded as missing data. Reported: median, p25, p75,
-min, max, `sample_size` — overall, per ordinal, and as a histogram with 15-minute
-bins. Min n = 5 per group.
+Gaps longer than 16 h are discarded as missing data, and reset the ordinal to
+*unknown* (0) until the next night is seen; windows of unknown ordinal count in the
+overall figures only. A window belongs to the range if it **ends** (the baby falls
+asleep) inside it. Reported: median, p25, p75, min, max, mean, `sample_size` —
+overall, per ordinal, and as a histogram with 15-minute bins. Min n = 5 per group.
 
 ## 8. Patterns
 
@@ -104,7 +111,7 @@ association.
 |---|---|---|
 | Wake window ↔ following nap duration | Spearman rank correlation ρ over (window, next nap) pairs, plus median nap duration per wake-window tercile | 12 pairs |
 | Nap duration by start time | median duration of naps grouped in 30-min start buckets (event-local) | 4 per bucket |
-| Change over time | median of last 7 days vs. the 7 days before, for wake window, nap duration, daily intake, total sleep; reported as absolute and % difference | 5 per period |
+| Change over time | last 7 days of the range vs. the 7 before (only for ranges of 14 days or more): median wake window, median nap duration (min 5 each per period), mean daily intake, mean daily sleep (min 3 complete days per period). Both values are reported; the UI shows them side by side | see left |
 
 ρ is labelled: |ρ| < 0.2 none · 0.2–0.4 weak · 0.4–0.6 moderate · ≥ 0.6 strong.
 The UI text for these labels says "associated with" and includes a fixed note that
@@ -158,7 +165,14 @@ user-facing feature.
 
 ## 10. Growth
 
-Series of weight / height / head measurements over time, and change between
-consecutive measurements (absolute and per week). **No percentiles** in v1: they
-require the WHO LMS reference tables and the baby's sex; the schema has room for
-both, and adding them is a self-contained later change.
+Not part of the statistics engine. Measurements are stored as events; the growth view
+(a later phase) reads them directly. **No percentiles**: they require the WHO LMS
+reference tables and the baby's sex; the schema has room for both.
+
+## 11. Where it runs
+
+| | |
+|---|---|
+| Server | `GET /api/v1/babies/{id}/stats?days=&end=&tz=` → `stats.Compute`. Also the input of the AI context. |
+| Android | `StatsViewModel` → `Stats.compute` over the local database, so the screen works offline and includes unsynced records. Charts are plain Compose `Canvas` bars (no chart library). |
+| Fixtures | `testdata/stats/*.json`. Inputs come from `generate_inputs.py`; expected outputs are written by `UPDATE_FIXTURES=1 go test ./internal/stats/` after the hand-checked Go tests pass. The Kotlin test fails on any difference. |

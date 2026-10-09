@@ -20,8 +20,8 @@ No public registration, no social features, no ads, no analytics.
 | 3 | Android foundation | done |
 | 4 | Core tracking | done |
 | 5 | Synchronization | done |
-| 6 | Statistics | next |
-| 7 | Sleep prediction | not started |
+| 6 | Statistics | done |
+| 7 | Sleep prediction | next |
 | 8 | AI | not started |
 | 9 | Polish | not started |
 
@@ -39,7 +39,8 @@ Start with [AGENTS.md](AGENTS.md) (project rules), then:
 ## Layout
 
 ```
-android/    Android app
+android/    Android app (app/) and the pure-Kotlin statistics engine (stats/)
+testdata/   Golden fixtures shared by the Go and Kotlin statistics engines
 server/     Go API
 deploy/     Reverse proxy and operations files
 docs/       Design documents

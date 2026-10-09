@@ -1,8 +1,8 @@
 # Architecture
 
 > **Status: APPROVED 2026-10-08.** The server (Phase 2), the Android foundation (Phase 3) and local tracking
-> (Phase 4) and synchronization (Phase 5) are implemented: two phones of a family
-> converge through the server.
+> (Phase 4), synchronization (Phase 5) and statistics (Phase 6, both engines) are
+> implemented.
 > Section 10 records the decisions that were taken.
 
 ## 1. Guiding principle
@@ -108,7 +108,7 @@ That is what makes them deterministic and testable.
 | Background | WorkManager | Sync with network constraint and backoff. |
 | Settings | DataStore (Preferences) | Language is handled by the platform, see §8. |
 | Token storage | DataStore, values encrypted with an Android Keystore AES-GCM key | `security-crypto` is deprecated; this is the same mechanism without the dependency. |
-| Charts | Vico (Compose) | Compose-native, themable, no View interop. Alternative: hand-drawn Canvas — more work, no dependency. |
+| Charts | Compose `Canvas` bar charts (`ui/stats/BarChart.kt`) | The statistics only need single-series bars; a chart library would be the largest dependency in the app for that. Each chart is one screen-reader element with a text summary. |
 | Min / target / compile SDK | 26 / 36 / 37 | 26 gives `java.time` without desugaring; current AndroidX requires compiling against 37. |
 | Application ID | `eu.elraro.babytracker` | Change before a first release if another ID is wanted; it cannot change afterwards. |
 | Build | Gradle 9.8 wrapper, AGP 9.4 (built-in Kotlin), versions in `gradle/libs.versions.toml`; compiles with a JDK 21 toolchain | |
@@ -120,7 +120,7 @@ Gradle modules:
 ```
 android/
   app/      UI, ViewModels, repositories, Room, sync, DI
-  stats/    (Phase 6) pure Kotlin/JVM: statistics + prediction. No Android imports.
+  stats/    pure Kotlin/JVM: statistics (and prediction, Phase 7). No Android imports.
 ```
 
 Two modules, not twenty. `stats` is separate only because the compiler then
