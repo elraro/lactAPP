@@ -531,6 +531,76 @@ func (q *Queries) ListEvents(ctx context.Context, arg ListEventsParams) ([]Event
 	return items, nil
 }
 
+const listEventsTouching = `-- name: ListEventsTouching :many
+SELECT id, family_id, baby_id, type, started_at, ended_at, timezone, amount_ml, milk_kind, diaper_kind, sleep_kind, weight_g, height_mm, head_mm, notes, seq, version, created_at, updated_at, deleted_at, created_by_user_id, created_by_device_id, updated_by_user_id, updated_by_device_id FROM events
+WHERE family_id = $1
+  AND baby_id = $2
+  AND deleted_at IS NULL
+  AND started_at < $3
+  AND (started_at >= $4
+       OR (type = 'sleep' AND (ended_at IS NULL OR ended_at >= $4)))
+ORDER BY started_at, id
+`
+
+type ListEventsTouchingParams struct {
+	FamilyID uuid.UUID
+	BabyID   uuid.UUID
+	ToTime   time.Time
+	FromTime time.Time
+}
+
+// Live events of a baby that start in [from_time, to_time), plus sleep that began earlier
+// and was still going on. Oldest first. Used by statistics and prediction.
+func (q *Queries) ListEventsTouching(ctx context.Context, arg ListEventsTouchingParams) ([]Event, error) {
+	rows, err := q.db.Query(ctx, listEventsTouching,
+		arg.FamilyID,
+		arg.BabyID,
+		arg.ToTime,
+		arg.FromTime,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Event
+	for rows.Next() {
+		var i Event
+		if err := rows.Scan(
+			&i.ID,
+			&i.FamilyID,
+			&i.BabyID,
+			&i.Type,
+			&i.StartedAt,
+			&i.EndedAt,
+			&i.Timezone,
+			&i.AmountMl,
+			&i.MilkKind,
+			&i.DiaperKind,
+			&i.SleepKind,
+			&i.WeightG,
+			&i.HeightMm,
+			&i.HeadMm,
+			&i.Notes,
+			&i.Seq,
+			&i.Version,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.CreatedByUserID,
+			&i.CreatedByDeviceID,
+			&i.UpdatedByUserID,
+			&i.UpdatedByDeviceID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateBaby = `-- name: UpdateBaby :exec
 UPDATE babies
 SET name = $3, date_of_birth = $4, sex = $5, notes = $6, deleted_at = $7,

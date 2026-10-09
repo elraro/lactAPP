@@ -69,3 +69,15 @@ SELECT * FROM applied_mutations WHERE family_id = $1 AND mutation_id = $2;
 -- name: InsertAppliedMutation :exec
 INSERT INTO applied_mutations (family_id, mutation_id, device_id, entity, entity_id, status, error_code, merged)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+
+-- name: ListEventsTouching :many
+-- Live events of a baby that start in [from_time, to_time), plus sleep that began earlier
+-- and was still going on. Oldest first. Used by statistics and prediction.
+SELECT * FROM events
+WHERE family_id = sqlc.arg(family_id)
+  AND baby_id = sqlc.arg(baby_id)
+  AND deleted_at IS NULL
+  AND started_at < sqlc.arg(to_time)
+  AND (started_at >= sqlc.arg(from_time)
+       OR (type = 'sleep' AND (ended_at IS NULL OR ended_at >= sqlc.arg(from_time))))
+ORDER BY started_at, id;

@@ -19,7 +19,7 @@ func TestFamiliesAreIsolated(t *testing.T) {
 	intruder := e.newFamily("intruder@example.com")
 
 	t.Run("read endpoints return 404", func(t *testing.T) {
-		for _, path := range []string{"/babies/" + baby, "/babies/" + baby + "/events"} {
+		for _, path := range []string{"/babies/" + baby, "/babies/" + baby + "/events", "/babies/" + baby + "/stats"} {
 			status, body := intruder.do("GET", path, nil)
 			expectError(t, status, body, http.StatusNotFound, "not_found")
 		}

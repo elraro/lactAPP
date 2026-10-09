@@ -1,0 +1,445 @@
+{
+ "input": {
+  "timezone": "Europe/Madrid",
+  "end": "2026-03-29",
+  "days": 2,
+  "now": "2026-03-30T08:00:00Z",
+  "events": [
+   {
+    "id": "e00018",
+    "type": "sleep",
+    "started_at": "2026-03-28T19:00:00Z",
+    "ended_at": "2026-03-29T05:00:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "night"
+   },
+   {
+    "id": "e00019",
+    "type": "bottle",
+    "started_at": "2026-03-28T23:00:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 90,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00020",
+    "type": "bottle",
+    "started_at": "2026-03-29T21:59:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 95,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00021",
+    "type": "bottle",
+    "started_at": "2026-03-29T22:00:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": 99,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00022",
+    "type": "sleep",
+    "started_at": "2026-03-29T10:00:00Z",
+    "ended_at": "2026-03-29T11:00:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   }
+  ]
+ },
+ "expected": {
+  "range": {
+   "days": 2,
+   "start": "2026-03-28",
+   "end": "2026-03-29",
+   "timezone": "Europe/Madrid",
+   "complete_days": 2
+  },
+  "feeding": {
+   "today_ml": 185,
+   "today_feeds": 2,
+   "total_ml": 185,
+   "feeds": 2,
+   "daily": [
+    {
+     "date": "2026-03-28",
+     "total_ml": 0,
+     "feeds": 0
+    },
+    {
+     "date": "2026-03-29",
+     "total_ml": 185,
+     "feeds": 2
+    }
+   ],
+   "avg_daily_ml": {
+    "value": null,
+    "sample_size": 1
+   },
+   "feeds_per_day_x10": {
+    "value": null,
+    "sample_size": 1
+   },
+   "amount_ml": {
+    "median": null,
+    "p25": null,
+    "p75": null,
+    "min": null,
+    "max": null,
+    "mean": null,
+    "sample_size": 2
+   },
+   "interval_s": {
+    "median": null,
+    "p25": null,
+    "p75": null,
+    "min": null,
+    "max": null,
+    "mean": null,
+    "sample_size": 1
+   },
+   "by_hour": [
+    {
+     "hour": 0,
+     "feeds": 1,
+     "total_ml": 90
+    },
+    {
+     "hour": 1,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 2,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 3,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 4,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 5,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 6,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 7,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 8,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 9,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 10,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 11,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 12,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 13,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 14,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 15,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 16,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 17,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 18,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 19,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 20,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 21,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 22,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 23,
+     "feeds": 1,
+     "total_ml": 95
+    }
+   ]
+  },
+  "diapers": {
+   "today": {
+    "total": 0,
+    "wet": 0,
+    "dirty": 0,
+    "both": 0
+   },
+   "total": {
+    "total": 0,
+    "wet": 0,
+    "dirty": 0,
+    "both": 0
+   },
+   "daily": [
+    {
+     "date": "2026-03-28",
+     "total": 0,
+     "wet": 0,
+     "dirty": 0,
+     "both": 0
+    },
+    {
+     "date": "2026-03-29",
+     "total": 0,
+     "wet": 0,
+     "dirty": 0,
+     "both": 0
+    }
+   ],
+   "per_day_x10": {
+    "value": null,
+    "sample_size": 0
+   }
+  },
+  "sleep": {
+   "today": {
+    "date": "2026-03-29",
+    "total_s": 25200,
+    "night_s": 21600,
+    "day_s": 3600,
+    "naps": 1
+   },
+   "daily": [
+    {
+     "date": "2026-03-28",
+     "total_s": 14400,
+     "night_s": 14400,
+     "day_s": 0,
+     "naps": 0
+    },
+    {
+     "date": "2026-03-29",
+     "total_s": 25200,
+     "night_s": 21600,
+     "day_s": 3600,
+     "naps": 1
+    }
+   ],
+   "avg_total_s": {
+    "value": null,
+    "sample_size": 2
+   },
+   "avg_night_s": {
+    "value": null,
+    "sample_size": 2
+   },
+   "avg_day_s": {
+    "value": null,
+    "sample_size": 2
+   },
+   "naps_per_day_x10": {
+    "value": null,
+    "sample_size": 2
+   },
+   "nap_duration_s": {
+    "median": null,
+    "p25": null,
+    "p75": null,
+    "min": null,
+    "max": null,
+    "mean": null,
+    "sample_size": 1
+   },
+   "nap_starts": [
+    {
+     "ordinal": 1,
+     "mean_minute_of_day": null,
+     "sample_size": 1
+    }
+   ]
+  },
+  "wake_windows": {
+   "overall": {
+    "median": null,
+    "p25": null,
+    "p75": null,
+    "min": null,
+    "max": null,
+    "mean": null,
+    "sample_size": 1
+   },
+   "by_ordinal": [
+    {
+     "ordinal": 1,
+     "median": null,
+     "p25": null,
+     "p75": null,
+     "min": null,
+     "max": null,
+     "mean": null,
+     "sample_size": 1
+    }
+   ],
+   "histogram": [
+    {
+     "from_s": 0,
+     "count": 0
+    },
+    {
+     "from_s": 900,
+     "count": 0
+    },
+    {
+     "from_s": 1800,
+     "count": 0
+    },
+    {
+     "from_s": 2700,
+     "count": 0
+    },
+    {
+     "from_s": 3600,
+     "count": 0
+    },
+    {
+     "from_s": 4500,
+     "count": 0
+    },
+    {
+     "from_s": 5400,
+     "count": 0
+    },
+    {
+     "from_s": 6300,
+     "count": 0
+    },
+    {
+     "from_s": 7200,
+     "count": 0
+    },
+    {
+     "from_s": 8100,
+     "count": 0
+    },
+    {
+     "from_s": 9000,
+     "count": 0
+    },
+    {
+     "from_s": 9900,
+     "count": 0
+    },
+    {
+     "from_s": 10800,
+     "count": 0
+    },
+    {
+     "from_s": 11700,
+     "count": 0
+    },
+    {
+     "from_s": 12600,
+     "count": 0
+    },
+    {
+     "from_s": 13500,
+     "count": 0
+    },
+    {
+     "from_s": 14400,
+     "count": 0
+    },
+    {
+     "from_s": 15300,
+     "count": 0
+    },
+    {
+     "from_s": 16200,
+     "count": 0
+    },
+    {
+     "from_s": 17100,
+     "count": 0
+    },
+    {
+     "from_s": 18000,
+     "count": 1
+    }
+   ]
+  },
+  "patterns": {
+   "wake_window_vs_nap": {
+    "spearman_x1000": null,
+    "strength": null,
+    "sample_size": 1,
+    "terciles": []
+   },
+   "nap_by_start_time": [],
+   "changes": []
+  }
+ }
+}

@@ -1,0 +1,485 @@
+{
+ "input": {
+  "timezone": "Europe/Madrid",
+  "end": "2026-10-08",
+  "days": 1,
+  "now": "2026-10-08T19:00:00Z",
+  "events": [
+   {
+    "id": "e00023",
+    "type": "sleep",
+    "started_at": "2026-10-08T08:00:00Z",
+    "ended_at": "2026-10-08T09:00:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00024",
+    "type": "sleep",
+    "started_at": "2026-10-08T08:30:00Z",
+    "ended_at": "2026-10-08T09:20:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00025",
+    "type": "sleep",
+    "started_at": "2026-10-08T12:00:00Z",
+    "ended_at": "2026-10-08T12:30:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00026",
+    "type": "sleep",
+    "started_at": "2026-10-08T12:30:00Z",
+    "ended_at": "2026-10-08T13:00:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00027",
+    "type": "sleep",
+    "started_at": "2026-10-08T18:00:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "night"
+   },
+   {
+    "id": "e00028",
+    "type": "sleep",
+    "started_at": "2026-10-08T18:10:00Z",
+    "ended_at": "2026-10-08T18:40:00Z",
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": "nap"
+   },
+   {
+    "id": "e00029",
+    "type": "bottle",
+    "started_at": "2026-10-08T14:00:00Z",
+    "ended_at": null,
+    "timezone": "America/New_York",
+    "amount_ml": 140,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00030",
+    "type": "bottle",
+    "started_at": "2026-10-08T15:00:00Z",
+    "ended_at": null,
+    "timezone": "Mars/Olympus",
+    "amount_ml": 60,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00031",
+    "type": "bottle",
+    "started_at": "2026-10-08T16:00:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00032",
+    "type": "diaper",
+    "started_at": "2026-10-08T16:30:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": null
+   },
+   {
+    "id": "e00033",
+    "type": "note",
+    "started_at": "2026-10-08T16:45:00Z",
+    "ended_at": null,
+    "timezone": "Europe/Madrid",
+    "amount_ml": null,
+    "diaper_kind": null,
+    "sleep_kind": null
+   }
+  ]
+ },
+ "expected": {
+  "range": {
+   "days": 1,
+   "start": "2026-10-08",
+   "end": "2026-10-08",
+   "timezone": "Europe/Madrid",
+   "complete_days": 0
+  },
+  "feeding": {
+   "today_ml": 200,
+   "today_feeds": 2,
+   "total_ml": 200,
+   "feeds": 2,
+   "daily": [
+    {
+     "date": "2026-10-08",
+     "total_ml": 200,
+     "feeds": 2
+    }
+   ],
+   "avg_daily_ml": {
+    "value": null,
+    "sample_size": 0
+   },
+   "feeds_per_day_x10": {
+    "value": null,
+    "sample_size": 0
+   },
+   "amount_ml": {
+    "median": null,
+    "p25": null,
+    "p75": null,
+    "min": null,
+    "max": null,
+    "mean": null,
+    "sample_size": 2
+   },
+   "interval_s": {
+    "median": null,
+    "p25": null,
+    "p75": null,
+    "min": null,
+    "max": null,
+    "mean": null,
+    "sample_size": 1
+   },
+   "by_hour": [
+    {
+     "hour": 0,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 1,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 2,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 3,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 4,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 5,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 6,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 7,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 8,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 9,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 10,
+     "feeds": 1,
+     "total_ml": 140
+    },
+    {
+     "hour": 11,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 12,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 13,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 14,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 15,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 16,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 17,
+     "feeds": 1,
+     "total_ml": 60
+    },
+    {
+     "hour": 18,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 19,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 20,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 21,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 22,
+     "feeds": 0,
+     "total_ml": 0
+    },
+    {
+     "hour": 23,
+     "feeds": 0,
+     "total_ml": 0
+    }
+   ]
+  },
+  "diapers": {
+   "today": {
+    "total": 0,
+    "wet": 0,
+    "dirty": 0,
+    "both": 0
+   },
+   "total": {
+    "total": 0,
+    "wet": 0,
+    "dirty": 0,
+    "both": 0
+   },
+   "daily": [
+    {
+     "date": "2026-10-08",
+     "total": 0,
+     "wet": 0,
+     "dirty": 0,
+     "both": 0
+    }
+   ],
+   "per_day_x10": {
+    "value": null,
+    "sample_size": 0
+   }
+  },
+  "sleep": {
+   "today": {
+    "date": "2026-10-08",
+    "total_s": 12000,
+    "night_s": 3600,
+    "day_s": 8400,
+    "naps": 3
+   },
+   "daily": [
+    {
+     "date": "2026-10-08",
+     "total_s": 12000,
+     "night_s": 3600,
+     "day_s": 8400,
+     "naps": 3
+    }
+   ],
+   "avg_total_s": {
+    "value": null,
+    "sample_size": 0
+   },
+   "avg_night_s": {
+    "value": null,
+    "sample_size": 0
+   },
+   "avg_day_s": {
+    "value": null,
+    "sample_size": 0
+   },
+   "naps_per_day_x10": {
+    "value": null,
+    "sample_size": 0
+   },
+   "nap_duration_s": {
+    "median": null,
+    "p25": null,
+    "p75": null,
+    "min": null,
+    "max": null,
+    "mean": null,
+    "sample_size": 3
+   },
+   "nap_starts": [
+    {
+     "ordinal": 1,
+     "mean_minute_of_day": null,
+     "sample_size": 1
+    },
+    {
+     "ordinal": 2,
+     "mean_minute_of_day": null,
+     "sample_size": 1
+    },
+    {
+     "ordinal": 3,
+     "mean_minute_of_day": null,
+     "sample_size": 1
+    }
+   ]
+  },
+  "wake_windows": {
+   "overall": {
+    "median": null,
+    "p25": null,
+    "p75": null,
+    "min": null,
+    "max": null,
+    "mean": null,
+    "sample_size": 3
+   },
+   "by_ordinal": [],
+   "histogram": [
+    {
+     "from_s": 0,
+     "count": 1
+    },
+    {
+     "from_s": 900,
+     "count": 0
+    },
+    {
+     "from_s": 1800,
+     "count": 0
+    },
+    {
+     "from_s": 2700,
+     "count": 0
+    },
+    {
+     "from_s": 3600,
+     "count": 0
+    },
+    {
+     "from_s": 4500,
+     "count": 0
+    },
+    {
+     "from_s": 5400,
+     "count": 0
+    },
+    {
+     "from_s": 6300,
+     "count": 0
+    },
+    {
+     "from_s": 7200,
+     "count": 0
+    },
+    {
+     "from_s": 8100,
+     "count": 0
+    },
+    {
+     "from_s": 9000,
+     "count": 1
+    },
+    {
+     "from_s": 9900,
+     "count": 0
+    },
+    {
+     "from_s": 10800,
+     "count": 0
+    },
+    {
+     "from_s": 11700,
+     "count": 0
+    },
+    {
+     "from_s": 12600,
+     "count": 0
+    },
+    {
+     "from_s": 13500,
+     "count": 0
+    },
+    {
+     "from_s": 14400,
+     "count": 0
+    },
+    {
+     "from_s": 15300,
+     "count": 0
+    },
+    {
+     "from_s": 16200,
+     "count": 0
+    },
+    {
+     "from_s": 17100,
+     "count": 0
+    },
+    {
+     "from_s": 18000,
+     "count": 1
+    }
+   ]
+  },
+  "patterns": {
+   "wake_window_vs_nap": {
+    "spearman_x1000": null,
+    "strength": null,
+    "sample_size": 2,
+    "terciles": []
+   },
+   "nap_by_start_time": [],
+   "changes": []
+  }
+ }
+}
