@@ -68,12 +68,15 @@ import eu.elraro.babytracker.domain.Event
 import eu.elraro.babytracker.domain.EventType
 import eu.elraro.babytracker.domain.TimelineKind
 import eu.elraro.babytracker.domain.TimelineRow
+import eu.elraro.babytracker.stats.KIND_NIGHT
+import eu.elraro.babytracker.stats.NextSleepEstimate
 import eu.elraro.babytracker.ui.common.EmptyState
 import eu.elraro.babytracker.ui.common.Formatters
 import eu.elraro.babytracker.ui.common.PrimaryActionHeight
 import eu.elraro.babytracker.ui.common.durationText
 import eu.elraro.babytracker.ui.common.rememberFormatters
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 
 private enum class QuickSheet { NONE, BOTTLE, DIAPER }
@@ -274,6 +277,7 @@ fun TodayContent(
                 FeedCard(state.lastBottle, formatters, today, actions.onAddBottle)
                 DiaperCard(state.lastDiaper, formatters, today, actions.onAddDiaper)
                 SleepCard(state, formatters, today, actions)
+                NextSleepCard(state.nextSleep, formatters, today)
             }
         }
         item(key = "day") {
@@ -424,6 +428,70 @@ private fun SleepCard(
             ActionButton(R.string.action_wake, Icons.Outlined.WbSunny, actions.onWake)
         } else {
             ActionButton(R.string.action_sleep, Icons.Outlined.Bedtime, actions.onSleep)
+        }
+    }
+}
+
+/**
+ * The estimate of when the baby will next fall asleep. Shown only when there is one: while
+ * asleep, during a night waking or without enough records the card is simply absent.
+ */
+@Composable
+private fun NextSleepCard(
+    estimate: NextSleepEstimate?,
+    formatters: Formatters,
+    today: LocalDate,
+) {
+    val start = estimate?.windowStart?.let(Instant::parse) ?: return
+    val end = estimate.windowEnd?.let(Instant::parse) ?: return
+    val basis = estimate.basis ?: return
+    val kind = stringResource(if (estimate.kind == KIND_NIGHT) R.string.prediction_bedtime else R.string.sleep_nap)
+    val confidence =
+        stringResource(
+            when (estimate.confidence) {
+                "high" -> R.string.confidence_high
+                "moderate" -> R.string.confidence_moderate
+                else -> R.string.confidence_low
+            },
+        )
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Text(
+                text = stringResource(R.string.prediction_title),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text =
+                    stringResource(
+                        R.string.prediction_window,
+                        formatters.timeOn(start, today),
+                        formatters.time(end),
+                    ),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Text(
+                text = stringResource(R.string.prediction_kind_and_confidence, kind, confidence),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            if (estimate.overdue == true) {
+                Text(
+                    text = stringResource(R.string.prediction_overdue),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
+            // What the estimate rests on, and what it is not.
+            Text(
+                text = pluralStringResource(R.plurals.prediction_basis, basis.sampleSize, basis.sampleSize),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = stringResource(R.string.prediction_note),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

@@ -236,4 +236,19 @@
     <string name="stats_change_intake">Milk per day</string>
     <string name="stats_change_sleep">Sleep per day</string>
     <string name="stats_change_value">%1$s now · %2$s before</string>
+
+    <!-- Next sleep estimate -->
+    <string name="prediction_title">Next sleep</string>
+    <string name="prediction_window">%1$s – %2$s</string>
+    <string name="prediction_bedtime">Bedtime</string>
+    <string name="confidence_high">High confidence</string>
+    <string name="confidence_moderate">Moderate confidence</string>
+    <string name="confidence_low">Low confidence</string>
+    <string name="prediction_kind_and_confidence">%1$s · %2$s</string>
+    <plurals name="prediction_basis">
+        <item quantity="one">Based on %1$d similar wake window</item>
+        <item quantity="other">Based on %1$d similar wake windows</item>
+    </plurals>
+    <string name="prediction_overdue">Awake longer than usual</string>
+    <string name="prediction_note">An estimate from past records, not a schedule.</string>
 </resources>

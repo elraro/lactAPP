@@ -21,6 +21,9 @@ import eu.elraro.babytracker.domain.SleepRules
 import eu.elraro.babytracker.domain.TimeSource
 import eu.elraro.babytracker.domain.Timeline
 import eu.elraro.babytracker.domain.TimelineRow
+import eu.elraro.babytracker.stats.NextSleep
+import eu.elraro.babytracker.stats.NextSleepEstimate
+import eu.elraro.babytracker.stats.NextSleepInput
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -38,6 +41,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -71,6 +75,8 @@ data class TodayUiState(
     val refreshing: Boolean = false,
     /** The first download after signing in could not be completed. */
     val firstSyncFailed: Boolean = false,
+    /** When the baby is expected to fall asleep next; null until computed or without a baby. */
+    val nextSleep: NextSleepEstimate? = null,
 ) {
     /**
      * Nothing has been downloaded yet, so we cannot know whether the family already has a
@@ -98,16 +104,32 @@ class TodayViewModel
         private val refreshing = MutableStateFlow(false)
         private val firstSyncFailed = MutableStateFlow(false)
 
-        private val today: Flow<LocalDate> =
+        /** Ticks while the screen is observed, so that the day and the estimate follow the clock. */
+        private val clock: Flow<Instant> =
             flow {
                 while (true) {
-                    emit(today())
-                    delay(DAY_CHECK_INTERVAL_MS)
+                    emit(time.now())
+                    delay(CLOCK_INTERVAL_MS)
                 }
-            }.distinctUntilChanged()
+            }
+
+        private val today: Flow<LocalDate> = clock.map { today() }.distinctUntilChanged()
+
+        private val baby: Flow<Baby?> = babies.observeAll().map { it.firstOrNull() }.distinctUntilChanged()
+
+        /** Recomputed when sleep records change and as time passes ("overdue" depends on now). */
+        private val nextSleep: Flow<NextSleepEstimate?> =
+            combine(baby, clock) { baby, _ -> baby }
+                .flatMapLatest { baby ->
+                    if (baby == null) return@flatMapLatest flowOf(null)
+                    val now = time.now()
+                    events
+                        .observeForStats(baby.id, now.minus(ESTIMATE_HISTORY), now.plus(Duration.ofDays(1)))
+                        .map { NextSleep.estimate(NextSleepInput(time.zone().id, time.now(), it)) }
+                }.distinctUntilChanged()
 
         private val tracking: Flow<TodayUiState> =
-            combine(babies.observeAll().map { it.firstOrNull() }, selectedDay, today) { baby, selected, today ->
+            combine(baby, selectedDay, today) { baby, selected, today ->
                 Triple(baby, selected ?: today, today)
             }.flatMapLatest { (baby, day, today) ->
                 val base = TodayUiState(loading = false, baby = baby, day = day, isToday = day == today)
@@ -143,8 +165,14 @@ class TodayViewModel
             }
 
         val state: StateFlow<TodayUiState> =
-            combine(screen, monitor.status, refreshing, firstSyncFailed) { screen, status, refreshing, failed ->
-                screen.copy(sync = status, refreshing = refreshing, firstSyncFailed = failed)
+            combine(
+                screen,
+                monitor.status,
+                refreshing,
+                firstSyncFailed,
+                nextSleep,
+            ) { screen, status, refreshing, failed, next ->
+                screen.copy(sync = status, refreshing = refreshing, firstSyncFailed = failed, nextSleep = next)
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), TodayUiState())
 
         init {
@@ -286,7 +314,10 @@ class TodayViewModel
 
         private companion object {
             const val STOP_TIMEOUT_MS = 5_000L
-            const val DAY_CHECK_INTERVAL_MS = 30_000L
+            const val CLOCK_INTERVAL_MS = 30_000L
+
+            // The estimate looks back 30 days; two more so that the first windows are complete.
+            val ESTIMATE_HISTORY: Duration = Duration.ofDays(NextSleep.LOOKBACK_DAYS + 2L)
             val DEFAULT_PAST_SLEEP: Duration = Duration.ofHours(1)
         }
     }

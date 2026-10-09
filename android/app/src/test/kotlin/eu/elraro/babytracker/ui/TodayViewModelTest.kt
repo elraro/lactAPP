@@ -145,6 +145,44 @@ class TodayViewModelTest {
         }
 
     @Test
+    fun `the next sleep is estimated from past days and disappears while asleep`() =
+        runBlocking {
+            startWithBaby()
+            val babyId =
+                vm.state.value.baby!!
+                    .id
+            val repo = EventRepository(db, time) {}
+            // Six regular days: up at 07:00 local, a nap 90 minutes later, bedtime at 19:00.
+            for (day in 2..7) {
+                val wake = Instant.parse("2026-10-0${day}T05:00:00Z")
+                val night = repo.newEvent(babyId, EventType.SLEEP).copy(sleepKind = SleepKind.NIGHT)
+                repo.create(night.copy(startedAt = wake.minus(Duration.ofHours(12)), endedAt = wake))
+                val nap = repo.newEvent(babyId, EventType.SLEEP).copy(sleepKind = SleepKind.NAP)
+                val napStart = wake.plus(Duration.ofMinutes(90))
+                repo.create(nap.copy(startedAt = napStart, endedAt = napStart.plus(Duration.ofHours(1))))
+            }
+            // This morning: woke at 07:00; the test clock says 10:15, well past the usual nap time.
+            val lastNight = repo.newEvent(babyId, EventType.SLEEP).copy(sleepKind = SleepKind.NIGHT)
+            repo.create(
+                lastNight.copy(
+                    startedAt = Instant.parse("2026-10-07T17:00:00Z"),
+                    endedAt = Instant.parse("2026-10-08T05:00:00Z"),
+                ),
+            )
+
+            val estimate = await { it.nextSleep?.status == "ok" }.nextSleep!!
+            // 07:00 + 90 min, widened to twenty minutes: 08:20–08:40 local.
+            assertEquals("2026-10-08T06:20:00Z", estimate.windowStart)
+            assertEquals("2026-10-08T06:40:00Z", estimate.windowEnd)
+            assertEquals("nap", estimate.kind)
+            assertEquals(true, estimate.overdue)
+            assertEquals(6, estimate.basis?.sampleSize)
+
+            vm.startSleep()
+            assertEquals("asleep", await { it.nextSleep?.status == "asleep" }.nextSleep?.status)
+        }
+
+    @Test
     fun `without a baby the screen asks for one`() =
         runBlocking {
             val empty = await { !it.loading && !it.awaitingFirstSync }

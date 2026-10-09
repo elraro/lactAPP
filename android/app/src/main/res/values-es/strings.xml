@@ -241,4 +241,20 @@
     <string name="stats_change_intake">Leche al día</string>
     <string name="stats_change_sleep">Sueño al día</string>
     <string name="stats_change_value">%1$s ahora · %2$s antes</string>
+
+    <!-- Next sleep estimate -->
+    <string name="prediction_title">Próximo sueño</string>
+    <string name="prediction_window">%1$s – %2$s</string>
+    <string name="prediction_bedtime">Hora de acostarse</string>
+    <string name="confidence_high">Confianza alta</string>
+    <string name="confidence_moderate">Confianza media</string>
+    <string name="confidence_low">Confianza baja</string>
+    <string name="prediction_kind_and_confidence">%1$s · %2$s</string>
+    <plurals name="prediction_basis">
+        <item quantity="one">Según %1$d ventana de vigilia parecida</item>
+        <item quantity="many">Según %1$d de ventanas de vigilia parecidas</item>
+        <item quantity="other">Según %1$d ventanas de vigilia parecidas</item>
+    </plurals>
+    <string name="prediction_overdue">Lleva más tiempo sin dormir de lo habitual</string>
+    <string name="prediction_note">Es una estimación a partir de los registros, no un horario.</string>
 </resources>
