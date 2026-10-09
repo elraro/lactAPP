@@ -10,8 +10,8 @@ app (Kotlin, Compose), a single Go REST server, and PostgreSQL. Parents record
 bottles, diapers, sleep and measurements; the system derives statistics and a
 next-nap estimate; an optional AI explains those results.
 
-**Current phase:** 6 complete (backend; Android sign-in, tracking, sync, statistics).
-Next: Phase 7 — next-sleep prediction. Prediction and AI do not exist yet.
+**Current phase:** 7 complete (backend; Android sign-in, tracking, sync, statistics,
+next-sleep estimate). Next: Phase 8 — AI. AI does not exist yet.
 Update this line when a phase completes.
 
 ## 2. Source of truth
@@ -48,7 +48,7 @@ Raw events → Deterministic statistics → Predictions / patterns → AI interp
 AGENTS.md  README.md  .env.example  docker-compose.yml
 docs/        the documents above
 server/      Go module: cmd/babytracker, internal/{config,httpapi,auth,syncsvc,store,apperr,testutil}, migrations/
-             plus internal/stats; internal/{predict,ai} arrive in Phases 7–8
+             plus internal/{stats,predict}; internal/ai arrives in Phase 8
 android/     Gradle project: app/ (UI, data, sync, DI), stats/ (pure Kotlin statistics engine)
 testdata/    stats/ golden fixtures shared by the Go and Kotlin engines
 deploy/      reverse proxy config, backup scripts
@@ -115,8 +115,9 @@ from a run with skips. Tools: `go install github.com/sqlc-dev/sqlc/cmd/sqlc@late
 - State is exposed as `StateFlow<UiState>`; composables are stateless where practical.
 - `android/stats` must not import `android.*` or `androidx.*`.
 - A statistics definition lives in four places that change **together, in one commit**:
-  docs/STATISTICS.md, `server/internal/stats`, `android/stats`, and the fixtures
-  (`UPDATE_FIXTURES=1 go test ./internal/stats/`, then `./gradlew :stats:test`). Integer
+  docs/STATISTICS.md, the Go engine (`server/internal/stats`, `predict`), `android/stats`,
+  and the fixtures (`UPDATE_FIXTURES=1 go test ./internal/stats/ ./internal/predict/`, then
+  `./gradlew :stats:test`). Integer
   arithmetic only, except Spearman; no map-iteration order in results.
 - A value below its minimum sample is shown as "not enough data", never as 0.
 - Data-layer network calls return `ApiResult`; never let an HTTP or I/O exception reach a

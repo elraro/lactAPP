@@ -1,7 +1,7 @@
 # REST API
 
-> **Status: APPROVED 2026-10-08.** §1–5 (statistics) and §7 are implemented; prediction (§5) and
-> AI (§6) are specified for Phases 7–8 and return 404 until then.
+> **Status: APPROVED 2026-10-08.** §1–5 and §7 are implemented; AI (§6) is specified for Phase 8
+> and returns 404 until then.
 
 Base path `/api/v1`. JSON only (`Content-Type: application/json`). HTTPS only in
 production.

@@ -1,8 +1,8 @@
 # Architecture
 
 > **Status: APPROVED 2026-10-08.** The server (Phase 2), the Android foundation (Phase 3) and local tracking
-> (Phase 4), synchronization (Phase 5) and statistics (Phase 6, both engines) are
-> implemented.
+> (Phase 4), synchronization (Phase 5), statistics (Phase 6) and the next-sleep
+> estimate (Phase 7) are implemented.
 > Section 10 records the decisions that were taken.
 
 ## 1. Guiding principle
@@ -88,7 +88,7 @@ internal/syncsvc/       push (mutation application) and pull (change feed)
 internal/apperr/        error type with the stable codes of API.md
 internal/testutil/      throwaway PostgreSQL database per test
 internal/stats/         (Phase 6) pure functions over []Event — no DB, no clock, no I/O
-internal/predict/       (Phase 7) next-sleep model — pure, depends on stats
+internal/predict/       next-sleep estimate — pure, depends on stats
 internal/ai/            (Phase 8) AIProvider interface, providers, context builder, prompt
 internal/store/         sqlc-generated queries + thin transaction helpers
 migrations/             goose SQL
@@ -120,7 +120,7 @@ Gradle modules:
 ```
 android/
   app/      UI, ViewModels, repositories, Room, sync, DI
-  stats/    pure Kotlin/JVM: statistics (and prediction, Phase 7). No Android imports.
+  stats/    pure Kotlin/JVM: statistics and the next-sleep estimate. No Android imports.
 ```
 
 Two modules, not twenty. `stats` is separate only because the compiler then

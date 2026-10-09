@@ -21,8 +21,8 @@ No public registration, no social features, no ads, no analytics.
 | 4 | Core tracking | done |
 | 5 | Synchronization | done |
 | 6 | Statistics | done |
-| 7 | Sleep prediction | next |
-| 8 | AI | not started |
+| 7 | Sleep prediction | done |
+| 8 | AI | next |
 | 9 | Polish | not started |
 
 ## Documentation

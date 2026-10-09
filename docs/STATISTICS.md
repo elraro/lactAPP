@@ -1,6 +1,6 @@
 # Statistics and prediction
 
-> **Status: APPROVED 2026-10-08.** §1–8 implemented in both engines (Phase 6); §9 prediction is Phase 7.
+> **Status: APPROVED 2026-10-08.** Implemented in both engines.
 > The exact output shape is the Go type `stats.Output` (`server/internal/stats/types.go`),
 > mirrored by `StatsOutput` in `android/stats`.
 
@@ -119,49 +119,60 @@ this does not show cause.
 
 ## 9. Next-sleep prediction (v1)
 
-Input: normalized sessions of the last 30 days, `now`.
+Implemented by `server/internal/predict` and `android/stats/NextSleep.kt`; fixtures in
+`testdata/predict`. Input: sleep events of the last 30 days (plus two), `now`, zone.
+All times are truncated to whole seconds and output in UTC.
 
-1. If a session is open → no prediction (baby is asleep).
-2. `T` = end of the last session; `k` = ordinal of the wake window now in progress.
-3. **Sample**: completed wake windows with ordinal `k` from the last 30 days.
-   If fewer than 5, fall back to all wake windows whose start time-of-day is
-   within ± 90 min of `T`'s; if still fewer than 5, all wake windows; fewer than
-   3 → **no prediction** (`insufficient_data`).
-4. **Recency weights** (integer): age 0–3 days → 4 · 4–7 → 3 · 8–14 → 2 · 15–30 → 1.
-5. Window = `[T + wP25, T + wP75]`, point estimate `T + wP50` (weighted percentiles).
-   The window is widened to at least 20 minutes.
-6. **Kind**: `night` if the point estimate is later than (median night start of
-   last 14 days − 45 min), else `nap`.
-7. **Confidence** from weighted sample count *n* and relative spread
-   `r = (wP75 − wP25) / wP50`:
+1. **As of now.** Events that start after `now` are ignored; a session that ends after
+   `now` is still in progress. Sessions are normalized as in §6.
+2. **Outcomes without an estimate** (`status`):
+   - `asleep` — the last session is open;
+   - `night_waking` — the last session is night sleep that ended between 20:00 and 05:00
+     local time. Daytime wake windows say nothing about how long a night waking lasts;
+   - `insufficient_data` — no sessions, awake for more than 16 h (stale records), or
+     fewer than 3 comparable windows.
+3. `T` = end of the last session; `k` = ordinal of the wake window now in progress
+   (§7), obtained by treating `now` as the start of a nap.
+4. **Sample** — completed wake windows that ended in the last 30 days:
+   `same_ordinal` (ordinal `k`, if at least 5) → else `time_of_day` (window start within
+   ± 90 min of `T`'s time of day, at least 5) → else `all` (at least 3).
+5. **Recency weights** by whole days since the window ended: 0–3 → 4 · 4–7 → 3 ·
+   8–14 → 2 · older → 1.
+6. **Band** — weighted percentiles (smallest value whose cumulative weight reaches p % of
+   the total; integers only): window = `[T + wP25, T + wP75]`, point = `T + wP50`. A band
+   narrower than 20 minutes is replaced by 20 minutes centred on it.
+7. **Kind** — `night` if the point's local time is before 06:00, or not earlier than
+   45 minutes before the usual bedtime (lower median of the first session of each night
+   in the last 14 days; with fewer than 3 bedtimes: from 19:00). Otherwise `nap`.
+8. **Confidence** from the sample count *n* and the spread `(wP75 − wP25) / wP50`:
 
    | Confidence | Condition |
    |---|---|
-   | High | n ≥ 10, r ≤ 0.25, sample from step 3 primary rule |
-   | Moderate | n ≥ 5, r ≤ 0.45 |
-   | Low | otherwise |
+   | high | n ≥ 10, spread ≤ 25 %, rule `same_ordinal` |
+   | moderate | n ≥ 5, spread ≤ 45 % |
+   | low | otherwise |
 
-8. If `now` is already past the window's end, the result is flagged `overdue`.
-
-Output:
+9. `overdue` is true when `now` is past the end of the window.
 
 ```json
 { "status": "ok", "kind": "nap",
-  "window_start": "2026-10-08T14:10:00Z", "window_end": "2026-10-08T14:35:00Z",
-  "point": "2026-10-08T14:22:00Z", "confidence": "moderate", "overdue": false,
-  "basis": { "wake_window_ordinal": 3, "sample_size": 11, "sample_rule": "same_ordinal",
-             "awake_since": "2026-10-08T12:40:00Z",
-             "wP25_s": 5400, "wP50_s": 6120, "wP75_s": 6900, "lookback_days": 30 } }
+  "window_start": "2026-10-08T06:20:00Z", "window_end": "2026-10-08T06:40:00Z",
+  "point": "2026-10-08T06:30:00Z", "confidence": "moderate", "overdue": false,
+  "basis": { "wake_window_ordinal": 1, "sample_size": 6, "sample_rule": "same_ordinal",
+             "awake_since": "2026-10-08T05:00:00Z",
+             "p25_s": 5100, "p50_s": 5400, "p75_s": 5700, "lookback_days": 30 } }
 ```
 
-`basis` is exactly what the UI shows under "Why this estimate?" and what the AI
-receives. The model is intentionally simple and inspectable.
+That example is worked out by hand in `predict.TestMorningEstimateByHand`. `basis` is
+what the app shows under the estimate and what the AI receives. The method is
+intentionally simple and inspectable: it describes what usually happened, and the app
+says so ("an estimate from past records, not a schedule").
 
-**Validation.** A backtest tool replays history (for each past wake window, predict
-using only earlier data) and reports the share of actual sleep starts that fell
-inside the predicted window, per confidence level. Confidence thresholds are only
-changed on the basis of that report. The backtest is a developer tool, not a
-user-facing feature.
+**Known limits.** It knows nothing about illness, travel, a skipped nap or a short
+night; the ordinal resets only at night sleep, so a day with an extra nap shifts the
+later ordinals. A backtest over recorded history (share of actual sleep starts inside
+the predicted window, per confidence level) is the intended way to tune the thresholds
+and is not built yet.
 
 ## 10. Growth
 
@@ -173,6 +184,6 @@ reference tables and the baby's sex; the schema has room for both.
 
 | | |
 |---|---|
-| Server | `GET /api/v1/babies/{id}/stats?days=&end=&tz=` → `stats.Compute`. Also the input of the AI context. |
-| Android | `StatsViewModel` → `Stats.compute` over the local database, so the screen works offline and includes unsynced records. Charts are plain Compose `Canvas` bars (no chart library). |
-| Fixtures | `testdata/stats/*.json`. Inputs come from `generate_inputs.py`; expected outputs are written by `UPDATE_FIXTURES=1 go test ./internal/stats/` after the hand-checked Go tests pass. The Kotlin test fails on any difference. |
+| Server | `GET /api/v1/babies/{id}/stats?days=&end=&tz=` → `stats.Compute`; `GET …/predictions/next-sleep?tz=` → `predict.NextSleep`. Also the input of the AI context. |
+| Android | `StatsViewModel` → `Stats.compute` and `TodayViewModel` → `NextSleep.estimate`, over the local database, so both work offline and include unsynced records. The estimate is refreshed every 30 s while Today is visible. Charts are plain Compose `Canvas` bars (no chart library). |
+| Fixtures | `testdata/stats/*.json` and `testdata/predict/*.json`. Inputs come from `generate_inputs.py`; expected outputs are written by `UPDATE_FIXTURES=1 go test ./internal/stats/` after the hand-checked Go tests pass. The Kotlin test fails on any difference. |
