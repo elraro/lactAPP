@@ -62,6 +62,7 @@ data class Baby(
     val id: String,
     val name: String,
     val dateOfBirth: LocalDate,
+    val notes: String? = null,
 )
 
 /**
@@ -96,11 +97,17 @@ enum class EventProblem {
     AMOUNT_OUT_OF_RANGE,
     NOTES_TOO_LONG,
     MISSING_DETAILS,
+    MEASUREMENT_OUT_OF_RANGE,
 }
 
 const val MIN_AMOUNT_ML = 1
 const val MAX_AMOUNT_ML = 1000
 const val MAX_NOTES_LENGTH = 4000
+
+// Plausible bounds for a child, the same as the server's (docs/DATABASE.md).
+val WEIGHT_RANGE_G = 200..60_000
+val HEIGHT_RANGE_MM = 200..2_000
+val HEAD_RANGE_MM = 100..800
 
 fun Event.problem(): EventProblem? =
     when {
@@ -122,9 +129,11 @@ private fun Event.detailsProblem(): EventProblem? =
         EventType.SLEEP -> EventProblem.MISSING_DETAILS.takeIf { sleepKind == null }
         EventType.NOTE -> EventProblem.MISSING_DETAILS.takeIf { notes.isNullOrBlank() }
         EventType.MEASUREMENT ->
-            EventProblem.MISSING_DETAILS.takeIf {
-                weightG == null &&
-                    heightMm == null &&
-                    headMm == null
+            when {
+                weightG == null && heightMm == null && headMm == null -> EventProblem.MISSING_DETAILS
+                weightG != null && weightG !in WEIGHT_RANGE_G -> EventProblem.MEASUREMENT_OUT_OF_RANGE
+                heightMm != null && heightMm !in HEIGHT_RANGE_MM -> EventProblem.MEASUREMENT_OUT_OF_RANGE
+                headMm != null && headMm !in HEAD_RANGE_MM -> EventProblem.MEASUREMENT_OUT_OF_RANGE
+                else -> null
             }
     }

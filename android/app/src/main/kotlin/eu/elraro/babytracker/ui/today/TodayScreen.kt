@@ -36,6 +36,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -120,6 +121,8 @@ fun TodayScreen(
                                 onSleep = viewModel::startSleep,
                                 onWake = viewModel::endSleep,
                                 onAddPastSleep = { viewModel.openNew(EventType.SLEEP) },
+                                onAddMeasurement = { viewModel.openNew(EventType.MEASUREMENT) },
+                                onAddNote = { viewModel.openNew(EventType.NOTE) },
                                 onFilter = viewModel::setFilter,
                                 onEdit = viewModel::openEdit,
                             ),
@@ -246,6 +249,8 @@ data class TodayActions(
     val onSleep: () -> Unit,
     val onWake: () -> Unit,
     val onAddPastSleep: () -> Unit,
+    val onAddMeasurement: () -> Unit,
+    val onAddNote: () -> Unit,
     val onFilter: (EventType?) -> Unit,
     val onEdit: (Event) -> Unit,
 )
@@ -278,6 +283,18 @@ fun TodayContent(
                 DiaperCard(state.lastDiaper, formatters, today, actions.onAddDiaper)
                 SleepCard(state, formatters, today, actions)
                 NextSleepCard(state.nextSleep, formatters, today)
+                // Less frequent records: smaller, but still comfortable to hit.
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = actions.onAddMeasurement,
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                    ) {
+                        Text(stringResource(R.string.row_measurement))
+                    }
+                    OutlinedButton(onClick = actions.onAddNote, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                        Text(stringResource(R.string.row_note))
+                    }
+                }
             }
         }
         item(key = "day") {
@@ -295,7 +312,14 @@ fun TodayContent(
             }
         }
         items(state.rows, key = { "${it.event.id}-${it.kind}" }) { row ->
-            TimelineItem(row, formatters, onClick = { actions.onEdit(row.event) })
+            TimelineItem(
+                row = row,
+                formatters = formatters,
+                overlaps = row.event.id in state.overlapping,
+                onClick = { actions.onEdit(row.event) },
+                // Rows slide into place when something is added, edited or removed.
+                modifier = Modifier.animateItem(),
+            )
         }
     }
 }
@@ -562,7 +586,9 @@ private fun FilterRow(
 private fun TimelineItem(
     row: TimelineRow,
     formatters: Formatters,
+    overlaps: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val event = row.event
     val (icon, text) =
@@ -585,12 +611,12 @@ private fun TimelineItem(
                         stringResource(R.string.row_sleep_end),
                         durationText(Duration.between(event.startedAt, event.endedAt ?: event.startedAt)),
                     )
-            TimelineKind.MEASUREMENT -> Icons.Outlined.Straighten to stringResource(R.string.row_measurement)
+            TimelineKind.MEASUREMENT -> Icons.Outlined.Straighten to measurementText(event, formatters)
             TimelineKind.NOTE -> Icons.AutoMirrored.Outlined.Notes to stringResource(R.string.row_note)
         }
     Row(
         modifier =
-            Modifier
+            modifier
                 .fillMaxWidth()
                 .heightIn(min = PrimaryActionHeight)
                 .clickable(onClickLabel = stringResource(R.string.action_edit), onClick = onClick)
@@ -606,6 +632,13 @@ private fun TimelineItem(
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         Column(modifier = Modifier.padding(start = 16.dp).weight(1f)) {
             Text(text, style = MaterialTheme.typography.bodyLarge)
+            if (overlaps) {
+                Text(
+                    text = stringResource(R.string.row_overlap),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
             event.notes?.let {
                 Text(
                     text = it,
@@ -616,4 +649,22 @@ private fun TimelineItem(
             }
         }
     }
+}
+
+/** "5.25 kg · 58 cm" from whichever measurements were taken. */
+@Composable
+private fun measurementText(
+    event: Event,
+    formatters: Formatters,
+): String {
+    val parts =
+        listOfNotNull(
+            event.weightG?.let { stringResource(R.string.value_weight_kg, formatters.kilograms(it)) },
+            event.heightMm?.let { stringResource(R.string.value_length_cm, formatters.centimetres(it)) },
+            event.headMm?.let { stringResource(R.string.value_length_cm, formatters.centimetres(it)) },
+        )
+    if (parts.isEmpty()) return stringResource(R.string.row_measurement)
+    var text = parts.first()
+    for (next in parts.drop(1)) text = stringResource(R.string.value_two_parts, text, next)
+    return text
 }

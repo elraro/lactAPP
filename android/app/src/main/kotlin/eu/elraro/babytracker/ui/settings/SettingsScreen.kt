@@ -35,6 +35,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,8 +44,13 @@ import eu.elraro.babytracker.R
 import eu.elraro.babytracker.data.remote.AiStatusDto
 import eu.elraro.babytracker.data.session.Account
 import eu.elraro.babytracker.data.sync.SyncStatus
+import eu.elraro.babytracker.domain.Baby
+import eu.elraro.babytracker.domain.MAX_NOTES_LENGTH
+import eu.elraro.babytracker.ui.common.DatePickerDialog
+import eu.elraro.babytracker.ui.common.FormTextField
 import eu.elraro.babytracker.ui.common.PrimaryActionHeight
 import eu.elraro.babytracker.ui.common.rememberFormatters
+import java.time.LocalDate
 
 @Composable
 fun SettingsScreen(
@@ -55,12 +62,14 @@ fun SettingsScreen(
     val sync by viewModel.syncStatus.collectAsStateWithLifecycle()
     val syncing by viewModel.syncing.collectAsStateWithLifecycle()
     val aiStatus by viewModel.aiStatus.collectAsStateWithLifecycle()
+    val baby by viewModel.baby.collectAsStateWithLifecycle()
     SettingsContent(
         account = account,
         language = language,
         sync = sync,
         syncing = syncing,
         aiStatus = aiStatus,
+        baby = baby,
         actions =
             SettingsActions(
                 onLanguageChange = {
@@ -70,6 +79,7 @@ fun SettingsScreen(
                 onSyncNow = viewModel::syncNow,
                 onDiscardFailed = viewModel::discardFailed,
                 onAiEnabled = viewModel::setAiEnabled,
+                onSaveBaby = viewModel::saveBaby,
                 onSignOut = viewModel::signOut,
             ),
         modifier = modifier,
@@ -81,6 +91,7 @@ data class SettingsActions(
     val onSyncNow: () -> Unit,
     val onDiscardFailed: () -> Unit,
     val onAiEnabled: (Boolean) -> Unit,
+    val onSaveBaby: (Baby) -> Unit,
     val onSignOut: () -> Unit,
 )
 
@@ -91,6 +102,7 @@ fun SettingsContent(
     sync: SyncStatus,
     syncing: Boolean,
     aiStatus: AiStatusDto?,
+    baby: Baby?,
     actions: SettingsActions,
     modifier: Modifier = Modifier,
 ) {
@@ -111,6 +123,12 @@ fun SettingsContent(
         SectionTitle(R.string.settings_sync)
         SyncSection(sync, syncing, onSyncNow = actions.onSyncNow, onDiscard = { confirmDiscard = true })
         HorizontalDivider()
+
+        if (baby != null) {
+            SectionTitle(R.string.settings_baby)
+            BabySection(baby, actions.onSaveBaby)
+            HorizontalDivider()
+        }
 
         SectionTitle(R.string.settings_ai)
         AiSection(aiStatus, actions.onAiEnabled)
@@ -189,6 +207,100 @@ fun SettingsContent(
         )
     }
 }
+
+/** The baby's profile: shown as a row, edited in a dialog. */
+@Composable
+private fun BabySection(
+    baby: Baby,
+    onSave: (Baby) -> Unit,
+) {
+    val formatters = rememberFormatters()
+    var editing by rememberSaveable { mutableStateOf(false) }
+    ListItem(
+        headlineContent = { Text(baby.name) },
+        supportingContent = {
+            Column {
+                Text(stringResource(R.string.baby_born, formatters.fullDate(baby.dateOfBirth)))
+                baby.notes?.let { Text(it) }
+            }
+        },
+        trailingContent = { TextButton(onClick = { editing = true }) { Text(stringResource(R.string.action_edit)) } },
+    )
+    if (editing) {
+        BabyDialog(baby, onDismiss = { editing = false }) {
+            editing = false
+            onSave(it)
+        }
+    }
+}
+
+@Composable
+private fun BabyDialog(
+    baby: Baby,
+    onDismiss: () -> Unit,
+    onSave: (Baby) -> Unit,
+) {
+    val formatters = rememberFormatters()
+    var name by rememberSaveable { mutableStateOf(baby.name) }
+    var notes by rememberSaveable { mutableStateOf(baby.notes.orEmpty()) }
+    // Saved as ISO text because LocalDate is not saveable by itself.
+    var birth by rememberSaveable { mutableStateOf(baby.dateOfBirth.toString()) }
+    var pickingDate by rememberSaveable { mutableStateOf(false) }
+    val birthDate = LocalDate.parse(birth)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.baby_edit_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                FormTextField(
+                    value = name,
+                    onValueChange = { name = it.take(MAX_NAME_LENGTH) },
+                    label = R.string.field_baby_name,
+                    error = if (name.isBlank()) R.string.error_required else null,
+                    capitalization = KeyboardCapitalization.Words,
+                )
+                Text(stringResource(R.string.field_date_of_birth), style = MaterialTheme.typography.labelLarge)
+                OutlinedButton(
+                    onClick = { pickingDate = true },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = PrimaryActionHeight),
+                ) {
+                    Text(formatters.fullDate(birthDate))
+                }
+                FormTextField(
+                    value = notes,
+                    onValueChange = { notes = it.take(MAX_NOTES_LENGTH) },
+                    label = R.string.field_notes,
+                    capitalization = KeyboardCapitalization.Sentences,
+                    imeAction = ImeAction.Default,
+                    singleLine = false,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                enabled = name.isNotBlank(),
+                onClick = { onSave(baby.copy(name = name, dateOfBirth = birthDate, notes = notes)) },
+            ) {
+                Text(stringResource(R.string.action_save))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
+    )
+    if (pickingDate) {
+        DatePickerDialog(
+            initial = birthDate,
+            onDismiss = { pickingDate = false },
+            onConfirm = {
+                pickingDate = false
+                // A birth date in the future is a slip of the finger.
+                birth = minOf(it, LocalDate.now()).toString()
+            },
+        )
+    }
+}
+
+private const val MAX_NAME_LENGTH = 100
 
 /**
  * The family's consent to AI explanations. Turning it on shows exactly what is sent and to

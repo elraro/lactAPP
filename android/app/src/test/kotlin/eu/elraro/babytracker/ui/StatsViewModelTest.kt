@@ -6,6 +6,7 @@ import eu.elraro.babytracker.TestBackend
 import eu.elraro.babytracker.data.repository.BabyRepository
 import eu.elraro.babytracker.data.repository.EventRepository
 import eu.elraro.babytracker.domain.DiaperKind
+import eu.elraro.babytracker.domain.EventType
 import eu.elraro.babytracker.ui.stats.AiUiState
 import eu.elraro.babytracker.ui.stats.StatsUiState
 import eu.elraro.babytracker.ui.stats.StatsViewModel
@@ -194,5 +195,18 @@ class StatsViewModelTest {
             assertEquals(R.string.error_ai_limit, failure(429, "rate_limited"))
             assertEquals(R.string.error_ai_provider, failure(502, "ai_provider_error"))
             assertEquals(R.string.error_ai_disabled, failure(403, "ai_disabled"))
+        }
+
+    @Test
+    fun `growth is shown even when nothing else has been recorded`() =
+        runBlocking {
+            val baby = babies.create("Vera", LocalDate.of(2026, 7, 1))
+            val weighing = events.newEvent(baby.id, EventType.MEASUREMENT).copy(weightG = 5200)
+            events.create(weighing)
+
+            val state = await { it.growth.isNotEmpty() }
+            assertEquals(5200, state.growth.single().weightG)
+            // A weighing is not feeding, sleep or diaper data: no statistics are made up from it.
+            assertNull(state.stats)
         }
 }

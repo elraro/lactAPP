@@ -12,6 +12,8 @@ import eu.elraro.babytracker.data.remote.ApiResult
 import eu.elraro.babytracker.data.repository.AiRepository
 import eu.elraro.babytracker.data.repository.BabyRepository
 import eu.elraro.babytracker.data.repository.EventRepository
+import eu.elraro.babytracker.domain.Event
+import eu.elraro.babytracker.domain.EventType
 import eu.elraro.babytracker.domain.TimeSource
 import eu.elraro.babytracker.stats.Stats
 import eu.elraro.babytracker.stats.StatsInput
@@ -40,6 +42,8 @@ data class StatsUiState(
     /** null when there is no baby yet or nothing has been recorded in the range. */
     val stats: StatsOutput? = null,
     val babyId: String? = null,
+    /** Every measurement ever recorded, oldest first; independent of the selected range. */
+    val growth: List<Event> = emptyList(),
 )
 
 /** The optional AI explanation shown under the statistics. */
@@ -121,14 +125,23 @@ class StatsViewModel
                     val today = time.now().atZone(zone).toLocalDate()
                     val from = today.minusDays(days - 1L).atStartOfDay(zone).toInstant()
                     val to = today.plusDays(1).atStartOfDay(zone).toInstant()
-                    events.observeForStats(baby.id, from.minus(LOOKBACK), to).map { rows ->
+                    combine(
+                        events.observeForStats(baby.id, from.minus(LOOKBACK), to),
+                        events.observeMeasurements(baby.id),
+                    ) { rows, growth ->
+                        // Measurements alone are not "statistics": they have their own card.
+                        val tracked =
+                            rows.filter {
+                                it.type != EventType.MEASUREMENT.wire &&
+                                    it.type != EventType.NOTE.wire
+                            }
                         val stats =
-                            if (rows.isEmpty()) {
+                            if (tracked.isEmpty()) {
                                 null
                             } else {
                                 Stats.compute(StatsInput(zone.id, today.toString(), days, time.now(), rows))
                             }
-                        StatsUiState(loading = false, days = days, stats = stats, babyId = babyId)
+                        StatsUiState(loading = false, days = days, stats = stats, babyId = babyId, growth = growth)
                     }
                 }.flowOn(Dispatchers.Default)
                 .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), StatsUiState())

@@ -67,6 +67,8 @@ data class TodayUiState(
     val openSleep: Event? = null,
     val lastSleep: Event? = null,
     val rows: List<TimelineRow> = emptyList(),
+    /** Sleep sessions of the day that overlap another one and need the parents' attention. */
+    val overlapping: Set<String> = emptySet(),
     val filter: EventType? = null,
     val editor: EditorState? = null,
     val message: TodayMessage? = null,
@@ -150,6 +152,7 @@ class TodayViewModel
                         lastSleep = lastSleep,
                         // Unfiltered here; the filter is applied below without re-querying.
                         rows = Timeline.build(dayEvents, from, to),
+                        overlapping = Timeline.overlappingSleepIds(dayEvents, time.now()),
                     )
                 }
             }
@@ -270,7 +273,8 @@ class TodayViewModel
             val form = editor.value ?: return
             val event = form.toEvent(time.zone())
             if (event == null) {
-                editor.value = form.copy(amountInvalid = true)
+                val measurement = form.type == EventType.MEASUREMENT
+                editor.value = form.copy(amountInvalid = !measurement, measurementInvalid = measurement)
                 return
             }
             viewModelScope.launch {
@@ -280,8 +284,11 @@ class TodayViewModel
                         is SaveResult.Saved, SaveResult.NotFound -> null
                         is SaveResult.OverlapsSleep -> form.copy(timeError = R.string.error_sleep_overlap)
                         is SaveResult.Invalid ->
-                            when (result.problem) {
-                                EventProblem.END_BEFORE_START -> form.copy(timeError = R.string.error_end_before_start)
+                            when {
+                                result.problem == EventProblem.END_BEFORE_START ->
+                                    form.copy(timeError = R.string.error_end_before_start)
+                                form.type == EventType.MEASUREMENT -> form.copy(measurementInvalid = true)
+                                form.type == EventType.NOTE -> form.copy(notesMissing = true)
                                 else -> form.copy(amountInvalid = true)
                             }
                     }

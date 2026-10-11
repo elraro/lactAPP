@@ -8,6 +8,7 @@ import eu.elraro.babytracker.data.local.AppDatabase
 import eu.elraro.babytracker.data.local.SyncStateEntity
 import eu.elraro.babytracker.data.repository.BabyRepository
 import eu.elraro.babytracker.data.repository.EventRepository
+import eu.elraro.babytracker.data.repository.toEntity
 import eu.elraro.babytracker.data.sync.SyncMonitor
 import eu.elraro.babytracker.data.sync.SyncOutcome
 import eu.elraro.babytracker.data.sync.SyncRunner
@@ -336,6 +337,91 @@ class TodayViewModelTest {
             vm.endSleep()
             val message = await { it.message != null }.message
             assertEquals(TodayMessage.Error(R.string.error_not_saved), message)
+        }
+
+    @Test
+    fun `a measurement typed with a comma or a point is stored in grams and millimetres`() =
+        runBlocking {
+            startWithBaby()
+            vm.openNew(EventType.MEASUREMENT)
+            await { it.editor != null }
+
+            vm.saveEditor() // nothing filled in
+            assertTrue(await { it.editor?.measurementInvalid == true }.editor!!.measurementInvalid)
+
+            vm.updateEditor { it.withWeight("5,25").withHeight("58.5") }
+            assertFalse(
+                vm.state.value.editor!!
+                    .measurementInvalid,
+            )
+            vm.saveEditor()
+            val saved = await { it.editor == null && it.rows.size == 1 }.rows.single().event
+            assertEquals(5250, saved.weightG)
+            assertEquals(585, saved.heightMm)
+            assertNull(saved.headMm)
+
+            // Editing shows the values back the way they were typed, minus the locale.
+            vm.openEdit(saved)
+            val form = await { it.editor != null }.editor!!
+            assertEquals("5.25", form.weightKg)
+            assertEquals("58.5", form.heightCm)
+
+            vm.updateEditor { it.withWeight("0,02") } // 20 g is not a baby
+            vm.saveEditor()
+            await { it.editor?.measurementInvalid == true }
+            vm.updateEditor { it.withWeight("5..2") } // not a number
+            vm.saveEditor()
+            await { it.editor?.measurementInvalid == true }
+            vm.dismissEditor()
+        }
+
+    @Test
+    fun `a note needs text`() =
+        runBlocking {
+            startWithBaby()
+            vm.openNew(EventType.NOTE)
+            await { it.editor != null }
+            vm.saveEditor()
+            assertTrue(await { it.editor?.notesMissing == true }.editor!!.notesMissing)
+
+            vm.updateEditor { it.withNotes("First laugh") }
+            assertFalse(
+                vm.state.value.editor!!
+                    .notesMissing,
+            )
+            vm.saveEditor()
+            assertEquals(
+                "First laugh",
+                await { it.editor == null && it.rows.size == 1 }
+                    .rows
+                    .single()
+                    .event.notes,
+            )
+        }
+
+    @Test
+    fun `sleep recorded on two phones is flagged for review`() =
+        runBlocking {
+            startWithBaby()
+            val babyId =
+                vm.state.value.baby!!
+                    .id
+            vm.startSleep()
+            val mine = await { it.openSleep != null }.openSleep!!
+            time.advance(Duration.ofMinutes(10))
+            // The other parent's record of the same nap arrives through sync, bypassing the
+            // check that prevents overlaps on one phone.
+            val theirs = mine.copy(id = "from-the-other-phone", startedAt = mine.startedAt.minusSeconds(120))
+            db.eventDao().upsert(theirs.toEntity().copy(version = 1))
+
+            val state = await { it.overlapping.size == 2 }
+            assertEquals(setOf(mine.id, theirs.id), state.overlapping)
+            assertEquals(babyId, theirs.babyId)
+
+            // Correcting one of them clears the flag.
+            vm.openEdit(theirs)
+            vm.deleteEdited()
+            assertTrue(await { it.overlapping.isEmpty() && it.rows.size == 1 }.overlapping.isEmpty())
         }
 
     private companion object {

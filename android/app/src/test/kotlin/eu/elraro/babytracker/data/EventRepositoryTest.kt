@@ -267,4 +267,44 @@ class EventRepositoryTest {
                 mutation.fields().mapValues { it.value.jsonPrimitive.content },
             )
         }
+
+    @Test
+    fun `editing the baby queues only what changed`() =
+        runTest {
+            val babies = BabyRepository(db, time) {}
+            val created = babies.create("Vera", LocalDate.of(2026, 7, 1))
+
+            babies.update(created.copy(notes = " allergic to nothing so far "))
+            babies.update(created.copy(notes = "allergic to nothing so far")) // no change
+            babies.update(created.copy(name = "  ")) // a baby needs a name
+
+            val stored = babies.observeAll().first().single()
+            assertEquals("allergic to nothing so far", stored.notes)
+            assertEquals("Vera", stored.name)
+            val edits = queue().drop(1)
+            assertEquals(1, edits.size)
+            assertEquals(setOf("notes"), edits.single().fields().keys)
+        }
+
+    @Test
+    fun `measurements are kept as a growth history, oldest first`() =
+        runTest {
+            fun weighing(
+                day: String,
+                grams: Int,
+            ) = repo
+                .newEvent(
+                    baby,
+                    EventType.MEASUREMENT,
+                ).copy(startedAt = Instant.parse("${day}T09:00:00Z"), weightG = grams)
+            repo.create(weighing("2026-10-15", 5500))
+            repo.create(weighing("2026-10-01", 5200))
+            repo.logBottle(baby, 120)
+
+            assertEquals(listOf(5200, 5500), repo.observeMeasurements(baby).first().map { it.weightG })
+            assertEquals(
+                SaveResult.Invalid(EventProblem.MEASUREMENT_OUT_OF_RANGE),
+                repo.create(weighing("2026-10-20", 20)),
+            )
+        }
 }

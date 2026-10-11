@@ -128,7 +128,8 @@ fun EventEditorSheet(
                     ChoiceChips(SleepKind.entries, state.sleepKind, { it.label }) { kind ->
                         onChange { it.copy(sleepKind = kind) }
                     }
-                EventType.MEASUREMENT, EventType.NOTE -> Unit
+                EventType.MEASUREMENT -> MeasurementFields(state, onChange)
+                EventType.NOTE -> Unit
             }
             val hasEnd = state.type == EventType.SLEEP || state.type == EventType.BOTTLE
             DateTimeField(
@@ -144,6 +145,7 @@ fun EventEditorSheet(
                 value = state.notes,
                 onValueChange = { notes -> onChange { it.withNotes(notes) } },
                 label = R.string.field_notes,
+                error = if (state.notesMissing) R.string.error_required else null,
                 capitalization = KeyboardCapitalization.Sentences,
                 imeAction = ImeAction.Default,
                 singleLine = false,
@@ -189,6 +191,36 @@ private fun BottleFields(
     ChoiceChips(MilkKind.entries, state.milkKind, { it.label }) { kind ->
         onChange { form -> form.copy(milkKind = if (kind == form.milkKind) null else kind) }
     }
+}
+
+@Composable
+private fun MeasurementFields(
+    state: EditorState,
+    onChange: ((EditorState) -> EditorState) -> Unit,
+) {
+    FormTextField(
+        value = state.weightKg,
+        onValueChange = { value -> onChange { it.withWeight(value) } },
+        label = R.string.field_weight_kg,
+        isError = state.measurementInvalid,
+        keyboardType = KeyboardType.Decimal,
+    )
+    FormTextField(
+        value = state.heightCm,
+        onValueChange = { value -> onChange { it.withHeight(value) } },
+        label = R.string.field_height_cm,
+        isError = state.measurementInvalid,
+        keyboardType = KeyboardType.Decimal,
+    )
+    FormTextField(
+        value = state.headCm,
+        onValueChange = { value -> onChange { it.withHead(value) } },
+        label = R.string.field_head_cm,
+        isError = state.measurementInvalid,
+        keyboardType = KeyboardType.Decimal,
+        imeAction = ImeAction.Done,
+    )
+    if (state.measurementInvalid) ErrorText(R.string.error_measurement)
 }
 
 /** The optional end of a sleep session or a feed. */

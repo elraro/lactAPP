@@ -61,7 +61,7 @@ fun Event.toEntity(deletedAt: Long? = null): EventEntity =
         deletedAt = deletedAt,
     )
 
-fun BabyEntity.toDomain(): Baby = Baby(id, name, LocalDate.parse(dateOfBirth))
+fun BabyEntity.toDomain(): Baby = Baby(id, name, LocalDate.parse(dateOfBirth), notes)
 
 private fun text(value: String?): JsonElement = value?.let(::JsonPrimitive) ?: JsonNull
 
@@ -97,11 +97,16 @@ fun EventEntity.changedFields(old: EventEntity): JsonObject {
     return JsonObject(fields().filter { (key, value) -> before[key] != value })
 }
 
-fun BabyEntity.createFields(): JsonObject =
-    JsonObject(
-        mapOf("name" to text(name), "date_of_birth" to text(dateOfBirth), "sex" to text(sex), "notes" to text(notes))
-            .filterValues { it != JsonNull },
-    )
+/** Every writable field of a baby, as sent to the server. */
+private fun BabyEntity.fields(): Map<String, JsonElement> =
+    mapOf("name" to text(name), "date_of_birth" to text(dateOfBirth), "sex" to text(sex), "notes" to text(notes))
+
+fun BabyEntity.createFields(): JsonObject = JsonObject(fields().filterValues { it != JsonNull })
+
+fun BabyEntity.changedFields(old: BabyEntity): JsonObject {
+    val before = old.fields()
+    return JsonObject(fields().filter { (key, value) -> before[key] != value })
+}
 
 fun pendingMutation(
     entity: String,

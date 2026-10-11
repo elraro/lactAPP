@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.elraro.babytracker.R
+import eu.elraro.babytracker.domain.Event
 import eu.elraro.babytracker.stats.Change
 import eu.elraro.babytracker.stats.Correlation
 import eu.elraro.babytracker.stats.Diapers
@@ -50,6 +51,7 @@ import java.time.Duration
 import java.time.LocalDate
 
 private const val SECONDS_PER_HOUR = 3600f
+private const val GRAMS_PER_KG = 1000f
 private const val SECONDS_PER_MINUTE = 60
 private const val HALF_HOUR_MINUTES = 30
 private const val MINUTES_PER_DAY = 24 * 60
@@ -97,13 +99,16 @@ fun StatsContent(
         val stats = state.stats
         when {
             state.loading -> Unit
-            stats == null -> EmptyState(Icons.Outlined.Insights, R.string.stats_empty_title, R.string.stats_empty_body)
+            stats == null && state.growth.isEmpty() ->
+                EmptyState(Icons.Outlined.Insights, R.string.stats_empty_title, R.string.stats_empty_body)
+            stats == null -> GrowthCard(state.growth, formatters)
             else -> {
                 FeedingCard(stats.feeding, formatters)
                 SleepCard(stats.sleep, formatters)
                 WakeWindowsCard(stats.wakeWindows)
                 PatternsCard(stats.patterns, formatters)
                 DiapersCard(stats.diapers, formatters)
+                GrowthCard(state.growth, formatters)
                 aiCard()
             }
         }
@@ -398,6 +403,78 @@ private fun SleepCard(
         )
     }
 }
+
+/**
+ * The history of measurements: latest values, the change since the previous weighing, and
+ * the weights as bars. No percentiles: those need a reference dataset (docs/STATISTICS.md §10).
+ */
+@Composable
+private fun GrowthCard(
+    measurements: List<Event>,
+    formatters: Formatters,
+) {
+    if (measurements.isEmpty()) return
+    val zone = formatters.zone
+    val weights = measurements.filter { it.weightG != null }
+    StatsCard(R.string.stats_growth) {
+        weights.lastOrNull()?.let { latest ->
+            val previous = weights.getOrNull(weights.size - 2)
+            val grams = latest.weightG ?: 0
+            Figure(
+                label = stringResource(R.string.growth_weight),
+                value = stringResource(R.string.value_weight_kg, formatters.kilograms(grams)),
+                detail =
+                    if (previous == null) {
+                        measuredOn(latest, formatters)
+                    } else {
+                        val change = formatters.signedKilograms(grams - (previous.weightG ?: grams))
+                        stringResource(
+                            R.string.growth_change,
+                            stringResource(R.string.value_weight_kg, change),
+                            formatters.fullDate(previous.startedAt.atZone(zone).toLocalDate()),
+                        )
+                    },
+            )
+        }
+        measurements.lastOrNull { it.heightMm != null }?.let {
+            Figure(
+                label = stringResource(R.string.growth_height),
+                value = stringResource(R.string.value_length_cm, formatters.centimetres(it.heightMm ?: 0)),
+                detail = measuredOn(it, formatters),
+            )
+        }
+        measurements.lastOrNull { it.headMm != null }?.let {
+            Figure(
+                label = stringResource(R.string.growth_head),
+                value = stringResource(R.string.value_length_cm, formatters.centimetres(it.headMm ?: 0)),
+                detail = measuredOn(it, formatters),
+            )
+        }
+        if (weights.size >= 2) {
+            BarChart(
+                title = stringResource(R.string.growth_chart_weight),
+                bars =
+                    weights.map {
+                        Bar(
+                            (it.weightG ?: 0) / GRAMS_PER_KG,
+                            formatters.shortDate(it.startedAt.atZone(zone).toLocalDate()),
+                        )
+                    },
+                formatValue = { formatters.kilograms((it * GRAMS_PER_KG).toInt()) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun measuredOn(
+    event: Event,
+    formatters: Formatters,
+): String =
+    stringResource(
+        R.string.growth_measured_on,
+        formatters.fullDate(event.startedAt.atZone(formatters.zone).toLocalDate()),
+    )
 
 @Composable
 private fun WakeWindowsCard(windows: WakeWindows) {

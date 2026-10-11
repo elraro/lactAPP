@@ -286,4 +286,28 @@ Las estadísticas las calcula siempre la aplicación, no la IA.</string>
     <string name="error_ai_limit">Se ha alcanzado el límite diario de explicaciones con IA. Vuelve a intentarlo mañana.</string>
     <string name="error_ai_provider">El proveedor de IA no ha podido generar una explicación. Vuelve a intentarlo más tarde.</string>
     <string name="error_ai_disabled">Las explicaciones con IA están desactivadas para tu familia.</string>
+
+    <!-- Measurements, notes and growth -->
+    <string name="field_weight_kg">Peso (kg)</string>
+    <string name="field_height_cm">Altura (cm)</string>
+    <string name="field_head_cm">Perímetro craneal (cm)</string>
+    <string name="error_measurement">Introduce al menos una medida, con un valor realista.</string>
+    <string name="value_weight_kg">%1$s kg</string>
+    <string name="value_length_cm">%1$s cm</string>
+    <string name="value_two_parts">%1$s · %2$s</string>
+    <string name="stats_growth">Crecimiento</string>
+    <string name="growth_weight">Peso</string>
+    <string name="growth_height">Altura</string>
+    <string name="growth_head">Perímetro craneal</string>
+    <string name="growth_measured_on">Medido el %1$s</string>
+    <string name="growth_change">%1$s desde el %2$s</string>
+    <string name="growth_chart_weight">Peso (kg)</string>
+
+    <!-- Sleep recorded twice -->
+    <string name="row_overlap">Se solapa con otro registro de sueño. Abre uno de los dos para corregirlo.</string>
+
+    <!-- Baby profile -->
+    <string name="settings_baby">Bebé</string>
+    <string name="baby_born">Nació el %1$s</string>
+    <string name="baby_edit_title">Perfil del bebé</string>
 </resources>

@@ -1,6 +1,8 @@
 package eu.elraro.babytracker.ui
 
+import eu.elraro.babytracker.FakeTime
 import eu.elraro.babytracker.TestBackend
+import eu.elraro.babytracker.data.repository.BabyRepository
 import eu.elraro.babytracker.data.sync.SyncMonitor
 import eu.elraro.babytracker.data.sync.SyncOutcome
 import eu.elraro.babytracker.data.sync.SyncRunner
@@ -43,7 +45,14 @@ class SettingsViewModelTest {
         backend.close()
     }
 
-    private fun viewModel() = SettingsViewModel(backend.auth, SyncMonitor(backend.database), runner, backend.ai)
+    private fun viewModel() =
+        SettingsViewModel(
+            backend.auth,
+            SyncMonitor(backend.database),
+            runner,
+            backend.ai,
+            BabyRepository(backend.database, FakeTime()) {},
+        )
 
     private fun status(enabled: Boolean) =
         """{"configured":true,"enabled":$enabled,"provider":"anthropic","model":"m","remaining_today":20}"""

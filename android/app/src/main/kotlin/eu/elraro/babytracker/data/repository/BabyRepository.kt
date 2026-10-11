@@ -48,4 +48,26 @@ class BabyRepository
             sync.requestSync()
             return entity.toDomain()
         }
+
+        /** Changes name, date of birth or notes; only what changed is queued. */
+        suspend fun update(baby: Baby) {
+            val changed =
+                db.withTransaction {
+                    val old = db.babyDao().get(baby.id)?.takeIf { it.deletedAt == null } ?: return@withTransaction false
+                    val new =
+                        old.copy(
+                            name = baby.name.trim(),
+                            dateOfBirth = baby.dateOfBirth.toString(),
+                            notes = baby.notes?.trim()?.ifEmpty { null },
+                        )
+                    val fields = new.changedFields(old)
+                    if (new.name.isEmpty() || fields.isEmpty()) return@withTransaction false
+                    db.babyDao().upsert(new)
+                    db.pendingMutationDao().insert(
+                        pendingMutation("baby", new.id, "upsert", fields, old.version, time.now()),
+                    )
+                    true
+                }
+            if (changed) sync.requestSync()
+        }
     }

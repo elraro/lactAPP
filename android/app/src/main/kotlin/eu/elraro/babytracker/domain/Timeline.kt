@@ -20,6 +20,29 @@ data class TimelineRow(
 
 object Timeline {
     /**
+     * IDs of sleep sessions that overlap another one. The app prevents this on one phone;
+     * it happens when two phones record the same sleep while offline (docs/SYNC.md §7).
+     * An open session counts as lasting until [now].
+     */
+    fun overlappingSleepIds(
+        events: List<Event>,
+        now: Instant,
+    ): Set<String> {
+        val sleeps = events.filter { it.type == EventType.SLEEP }.sortedBy { it.startedAt }
+        val ids = mutableSetOf<String>()
+        for (i in sleeps.indices) {
+            val end = sleeps[i].endedAt ?: now
+            // Sorted by start: once a later session starts at or after this end, none overlaps.
+            for (j in i + 1 until sleeps.size) {
+                if (!sleeps[j].startedAt.isBefore(end)) break
+                ids += sleeps[i].id
+                ids += sleeps[j].id
+            }
+        }
+        return ids
+    }
+
+    /**
      * Rows whose moment lies in [from, to), newest first. A night that crosses midnight
      * shows "sleep" on the day it began and "wake" on the day it ended.
      */

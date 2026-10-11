@@ -280,4 +280,28 @@ The statistics themselves are always calculated by the app, not by the AI.</stri
     <string name="error_ai_limit">Today\'s limit of AI explanations has been reached. Try again tomorrow.</string>
     <string name="error_ai_provider">The AI provider could not produce an explanation. Try again later.</string>
     <string name="error_ai_disabled">AI explanations are turned off for your family.</string>
+
+    <!-- Measurements, notes and growth -->
+    <string name="field_weight_kg">Weight (kg)</string>
+    <string name="field_height_cm">Height (cm)</string>
+    <string name="field_head_cm">Head circumference (cm)</string>
+    <string name="error_measurement">Enter at least one measurement, with a realistic value.</string>
+    <string name="value_weight_kg">%1$s kg</string>
+    <string name="value_length_cm">%1$s cm</string>
+    <string name="value_two_parts">%1$s · %2$s</string>
+    <string name="stats_growth">Growth</string>
+    <string name="growth_weight">Weight</string>
+    <string name="growth_height">Height</string>
+    <string name="growth_head">Head circumference</string>
+    <string name="growth_measured_on">Measured on %1$s</string>
+    <string name="growth_change">%1$s since %2$s</string>
+    <string name="growth_chart_weight">Weight (kg)</string>
+
+    <!-- Sleep recorded twice -->
+    <string name="row_overlap">Overlaps another sleep record. Open one of them to correct it.</string>
+
+    <!-- Baby profile -->
+    <string name="settings_baby">Baby</string>
+    <string name="baby_born">Born %1$s</string>
+    <string name="baby_edit_title">Baby profile</string>
 </resources>

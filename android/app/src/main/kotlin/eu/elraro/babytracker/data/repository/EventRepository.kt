@@ -87,6 +87,9 @@ class EventRepository
             type: EventType,
         ): Flow<Event?> = events.observeLatest(babyId, type.wire).map { it?.toDomain() }
 
+        fun observeMeasurements(babyId: String): Flow<List<Event>> =
+            events.observeMeasurements(babyId).map { rows -> rows.mapNotNull { it.toDomain() } }
+
         fun observeOpenSleep(babyId: String): Flow<Event?> = events.observeOpenSleep(babyId).map { it?.toDomain() }
 
         suspend fun logBottle(

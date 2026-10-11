@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import eu.elraro.babytracker.R
+import java.text.NumberFormat
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
@@ -29,6 +30,7 @@ class Formatters(
     private val time =
         DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, if (is24Hour) "Hm" else "hm"), locale)
     private val date = DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "EEEdMMMM"), locale)
+    private val fullDate = DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "dMMMMy"), locale)
     private val shortDate = DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "dM"), locale)
 
     fun time(instant: Instant): String = time.format(instant.atZone(zone))
@@ -48,6 +50,27 @@ class Formatters(
 
     /** Day and month without the year, for chart axes. */
     fun shortDate(day: LocalDate): String = shortDate.format(day)
+
+    /** Kilograms from grams, e.g. "5.25" / "5,25". */
+    fun kilograms(grams: Int): String = decimal(grams / GRAMS_PER_KG, KG_DECIMALS)
+
+    /** A change in weight with its sign, e.g. "+0.3" / "−0,12". */
+    fun signedKilograms(grams: Int): String = (if (grams >= 0) "+" else "−") + kilograms(kotlin.math.abs(grams))
+
+    /** Centimetres from millimetres, e.g. "58.5". */
+    fun centimetres(millimetres: Int): String = decimal(millimetres / MM_PER_CM, 1)
+
+    /** A date with its year, for things that happened long ago. */
+    fun fullDate(day: LocalDate): String = fullDate.format(day)
+
+    private fun decimal(
+        value: Double,
+        maxDecimals: Int,
+    ): String =
+        NumberFormat.getNumberInstance(locale).run {
+            maximumFractionDigits = maxDecimals
+            format(value)
+        }
 
     /** A number with one decimal in the selected language, from a value in tenths. */
     fun tenths(valueX10: Int): String = String.format(locale, "%.1f", valueX10 / TENTHS)
@@ -89,3 +112,6 @@ fun durationText(duration: Duration): String {
 
 private const val MINUTES_PER_HOUR = 60
 private const val TENTHS = 10.0
+private const val GRAMS_PER_KG = 1000.0
+private const val MM_PER_CM = 10.0
+private const val KG_DECIMALS = 2

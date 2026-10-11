@@ -110,6 +110,16 @@ interface EventDao {
     @Query("SELECT id FROM events WHERE version > 0")
     suspend fun syncedIds(): List<String>
 
+    /** Every measurement of a baby, oldest first: the growth history. */
+    @Query(
+        """
+        SELECT * FROM events
+        WHERE baby_id = :babyId AND type = 'measurement' AND deleted_at IS NULL
+        ORDER BY started_at, id
+        """,
+    )
+    fun observeMeasurements(babyId: String): Flow<List<EventEntity>>
+
     /** Live events of [babyId] that the server has never confirmed. */
     @Query("SELECT * FROM events WHERE baby_id = :babyId AND version = 0 AND deleted_at IS NULL")
     suspend fun neverUploaded(babyId: String): List<EventEntity>

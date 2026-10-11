@@ -105,4 +105,35 @@ class DomainTest {
         val rows = Timeline.build(listOf(blink), Instant.MIN, Instant.MAX)
         assertEquals(listOf(TimelineKind.SLEEP_END, TimelineKind.SLEEP_START), rows.map { it.kind })
     }
+
+    @Test
+    fun `sleep recorded twice is flagged on both records`() {
+        val now = Instant.parse("2026-10-08T20:00:00Z")
+        val a = event(EventType.SLEEP, "2026-10-08T08:00:00Z", "2026-10-08T09:00:00Z", id = "a")
+        val b = event(EventType.SLEEP, "2026-10-08T08:30:00Z", "2026-10-08T09:20:00Z", id = "b")
+        val touching = event(EventType.SLEEP, "2026-10-08T09:20:00Z", "2026-10-08T09:40:00Z", id = "c")
+        val open = event(EventType.SLEEP, "2026-10-08T18:00:00Z", id = "open")
+        val inside = event(EventType.SLEEP, "2026-10-08T18:30:00Z", "2026-10-08T19:00:00Z", id = "inside")
+        val bottle = event(EventType.BOTTLE, "2026-10-08T08:10:00Z", id = "bottle")
+
+        assertEquals(setOf("a", "b"), Timeline.overlappingSleepIds(listOf(touching, b, bottle, a), now))
+        // A session still in progress lasts until now.
+        assertEquals(setOf("open", "inside"), Timeline.overlappingSleepIds(listOf(open, inside), now))
+        assertTrue(Timeline.overlappingSleepIds(listOf(a, touching, open), now).isEmpty())
+    }
+
+    @Test
+    fun `measurements need at least one realistic value`() {
+        val m = event(EventType.MEASUREMENT, "2026-10-08T10:00:00Z")
+        assertEquals(EventProblem.MISSING_DETAILS, m.problem())
+        assertNull(m.copy(weightG = 5200).problem())
+        assertNull(m.copy(heightMm = 580, headMm = 400).problem())
+        assertEquals(EventProblem.MEASUREMENT_OUT_OF_RANGE, m.copy(weightG = 52).problem())
+        assertEquals(EventProblem.MEASUREMENT_OUT_OF_RANGE, m.copy(weightG = 5200, heightMm = 58).problem())
+        assertEquals(EventProblem.MEASUREMENT_OUT_OF_RANGE, m.copy(headMm = 4000).problem())
+        assertEquals(
+            EventProblem.MISSING_DETAILS,
+            event(EventType.NOTE, "2026-10-08T10:00:00Z").copy(notes = " ").problem(),
+        )
+    }
 }

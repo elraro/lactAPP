@@ -7,13 +7,16 @@ import eu.elraro.babytracker.data.remote.AiStatusDto
 import eu.elraro.babytracker.data.remote.ApiResult
 import eu.elraro.babytracker.data.repository.AiRepository
 import eu.elraro.babytracker.data.repository.AuthRepository
+import eu.elraro.babytracker.data.repository.BabyRepository
 import eu.elraro.babytracker.data.sync.SyncMonitor
 import eu.elraro.babytracker.data.sync.SyncRunner
 import eu.elraro.babytracker.data.sync.SyncStatus
+import eu.elraro.babytracker.domain.Baby
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,7 +29,18 @@ class SettingsViewModel
         monitor: SyncMonitor,
         private val sync: SyncRunner,
         private val aiRepository: AiRepository,
+        private val babies: BabyRepository,
     ) : ViewModel() {
+        val baby: StateFlow<Baby?> =
+            babies
+                .observeAll()
+                .map { it.firstOrNull() }
+                .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
+
+        fun saveBaby(baby: Baby) {
+            viewModelScope.launch { babies.update(baby) }
+        }
+
         /** null until the server has answered (or while offline). */
         private val _aiStatus = MutableStateFlow<AiStatusDto?>(null)
         val aiStatus: StateFlow<AiStatusDto?> = _aiStatus.asStateFlow()
