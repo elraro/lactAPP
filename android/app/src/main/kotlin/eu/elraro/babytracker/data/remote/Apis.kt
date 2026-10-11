@@ -34,6 +34,9 @@ interface AuthApi {
 interface AccountApi {
     @POST("auth/logout")
     suspend fun logout()
+
+    @POST("auth/invites")
+    suspend fun createInvite(): InviteDto
 }
 
 /** Optional AI explanations (docs/AI.md). Online only: consent is never queued. */

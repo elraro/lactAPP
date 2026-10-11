@@ -86,7 +86,14 @@ class Formatters(
         day: LocalDate,
     ): String {
         val local = instant.atZone(zone)
-        return if (local.toLocalDate() == day) time.format(local) else "${date.format(local)}, ${time.format(local)}"
+        // The short date keeps the summary cards on one line when the last record is days old.
+        return if (local.toLocalDate() ==
+            day
+        ) {
+            time.format(local)
+        } else {
+            "${shortDate.format(local)}, ${time.format(local)}"
+        }
     }
 }
 

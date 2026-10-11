@@ -6,6 +6,7 @@ import eu.elraro.babytracker.data.remote.AccountApi
 import eu.elraro.babytracker.data.remote.ApiResult
 import eu.elraro.babytracker.data.remote.AuthApi
 import eu.elraro.babytracker.data.remote.DeviceDto
+import eu.elraro.babytracker.data.remote.InviteDto
 import eu.elraro.babytracker.data.remote.LoginRequest
 import eu.elraro.babytracker.data.remote.RedeemRequest
 import eu.elraro.babytracker.data.remote.SessionResponse
@@ -112,6 +113,10 @@ class AuthRepository
                     }
                 }
             }
+
+        /** Creates a single-use code for the other parent. Needs a connection. */
+        suspend fun createInvite(): ApiResult<InviteDto> =
+            withContext(io) { apiCall(json) { accountApi.createInvite() } }
 
         /**
          * Signs out and removes all local data. Telling the server is best effort: the device

@@ -310,4 +310,10 @@ Las estadísticas las calcula siempre la aplicación, no la IA.</string>
     <string name="settings_baby">Bebé</string>
     <string name="baby_born">Nació el %1$s</string>
     <string name="baby_edit_title">Perfil del bebé</string>
+
+    <!-- Inviting the other parent -->
+    <string name="action_invite">Invitar al otro progenitor</string>
+    <string name="invite_title">Código de invitación</string>
+    <string name="invite_body">En el otro teléfono, abre la aplicación, toca «Tengo un código», activa «Me ha invitado el otro progenitor» e introduce este código. Solo sirve una vez.</string>
+    <string name="invite_expires">Válido hasta el %1$s</string>
 </resources>

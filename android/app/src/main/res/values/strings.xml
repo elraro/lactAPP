@@ -304,4 +304,10 @@ The statistics themselves are always calculated by the app, not by the AI.</stri
     <string name="settings_baby">Baby</string>
     <string name="baby_born">Born %1$s</string>
     <string name="baby_edit_title">Baby profile</string>
+
+    <!-- Inviting the other parent -->
+    <string name="action_invite">Invite the other parent</string>
+    <string name="invite_title">Invitation code</string>
+    <string name="invite_body">On the other phone, open the app, tap \"I have a code\", turn on \"I was invited by the other parent\" and enter this code. It works once.</string>
+    <string name="invite_expires">Valid until %1$s</string>
 </resources>

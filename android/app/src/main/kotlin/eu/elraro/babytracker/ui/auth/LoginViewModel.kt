@@ -68,7 +68,7 @@ class LoginViewModel
         fun submit() {
             val current = _state.value
             if (current.loading) return
-            val server = ServerUrl.parse(current.server, allowCleartext = BuildConfig.DEBUG)
+            val server = ServerUrl.parse(current.server, allowCleartext = BuildConfig.ALLOW_CLEARTEXT)
             val checked =
                 current.copy(
                     serverError = server.errorRes(current.server),

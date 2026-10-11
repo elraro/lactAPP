@@ -24,10 +24,24 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Plain HTTP is accepted so that a development server on the LAN can be used.
+            buildConfigField("boolean", "ALLOW_CLEARTEXT", "true")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            buildConfigField("boolean", "ALLOW_CLEARTEXT", "false")
+        }
+        // The release build (minified, not debuggable) signed with the debug key and allowed to
+        // use plain HTTP: for checking the shrunk app against a local server. Never distribute it.
+        create("staging") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".staging"
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += "release"
+            buildConfigField("boolean", "ALLOW_CLEARTEXT", "true")
         }
     }
 

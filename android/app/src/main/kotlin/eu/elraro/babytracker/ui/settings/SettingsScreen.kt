@@ -12,8 +12,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -63,6 +65,7 @@ fun SettingsScreen(
     val syncing by viewModel.syncing.collectAsStateWithLifecycle()
     val aiStatus by viewModel.aiStatus.collectAsStateWithLifecycle()
     val baby by viewModel.baby.collectAsStateWithLifecycle()
+    val invite by viewModel.invite.collectAsStateWithLifecycle()
     SettingsContent(
         account = account,
         language = language,
@@ -80,10 +83,12 @@ fun SettingsScreen(
                 onDiscardFailed = viewModel::discardFailed,
                 onAiEnabled = viewModel::setAiEnabled,
                 onSaveBaby = viewModel::saveBaby,
+                onInvite = viewModel::createInvite,
                 onSignOut = viewModel::signOut,
             ),
         modifier = modifier,
     )
+    invite?.let { InviteDialog(it, onDismiss = viewModel::dismissInvite) }
 }
 
 data class SettingsActions(
@@ -92,6 +97,7 @@ data class SettingsActions(
     val onDiscardFailed: () -> Unit,
     val onAiEnabled: (Boolean) -> Unit,
     val onSaveBaby: (Baby) -> Unit,
+    val onInvite: () -> Unit,
     val onSignOut: () -> Unit,
 )
 
@@ -147,6 +153,12 @@ fun SettingsContent(
             overlineContent = { Text(stringResource(R.string.settings_account_server)) },
             headlineContent = { Text(account.serverUrl) },
         )
+        OutlinedButton(
+            onClick = actions.onInvite,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).heightIn(min = PrimaryActionHeight),
+        ) {
+            Text(stringResource(R.string.action_invite))
+        }
         OutlinedButton(
             onClick = { confirmSignOut = true },
             modifier = Modifier.fillMaxWidth().padding(16.dp).heightIn(min = PrimaryActionHeight),
@@ -206,6 +218,42 @@ fun SettingsContent(
             },
         )
     }
+}
+
+/** Shows the single-use code the other parent types into "I have a code" on their phone. */
+@Composable
+private fun InviteDialog(
+    invite: InviteUiState,
+    onDismiss: () -> Unit,
+) {
+    val formatters = rememberFormatters()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.invite_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                when {
+                    invite.loading -> CircularProgressIndicator()
+                    invite.error != null -> Text(stringResource(invite.error), color = MaterialTheme.colorScheme.error)
+                    else -> {
+                        Text(stringResource(R.string.invite_body))
+                        // Selectable so that it can be copied into a message.
+                        SelectionContainer {
+                            Text(invite.code.orEmpty(), style = MaterialTheme.typography.headlineMedium)
+                        }
+                        invite.expiresAt?.let {
+                            Text(
+                                text = stringResource(R.string.invite_expires, formatters.dateTime(it)),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_ok)) } },
+    )
 }
 
 /** The baby's profile: shown as a row, edited in a dialog. */

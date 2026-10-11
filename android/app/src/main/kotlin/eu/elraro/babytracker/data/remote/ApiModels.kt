@@ -59,6 +59,13 @@ data class SessionResponse(
     val family: FamilyDto,
 )
 
+/** A single-use code with which another parent joins the family (docs/API.md §2). */
+@Serializable
+data class InviteDto(
+    val code: String,
+    @SerialName("expires_at") val expiresAt: String,
+)
+
 @Serializable
 data class ErrorResponse(
     val error: ErrorBody,

@@ -1,6 +1,7 @@
 package eu.elraro.babytracker.ui
 
 import eu.elraro.babytracker.FakeTime
+import eu.elraro.babytracker.R
 import eu.elraro.babytracker.TestBackend
 import eu.elraro.babytracker.data.repository.BabyRepository
 import eu.elraro.babytracker.data.sync.SyncMonitor
@@ -88,5 +89,33 @@ class SettingsViewModelTest {
             val vm = viewModel()
             vm.setAiEnabled(true) // cannot reach the server: nothing changes, nothing is queued
             assertNull(vm.aiStatus.value)
+        }
+
+    @Test
+    fun `an invitation code is requested from the server and shown, or the failure explained`() =
+        runBlocking {
+            backend.enqueueJson(200, status(enabled = false))
+            val vm = viewModel()
+            withTimeout(10_000) { vm.aiStatus.first { it != null } }
+            backend.server.takeRequest()
+
+            backend.enqueueJson(201, """{"code":"K7QF-2M9X-PD4T","expires_at":"2026-10-10T12:00:00Z"}""")
+            vm.createInvite()
+            val shown = withTimeout(10_000) { vm.invite.first { it?.code != null } }!!
+            assertEquals("K7QF-2M9X-PD4T", shown.code)
+            assertEquals(
+                "/api/v1/auth/invites",
+                backend.server
+                    .takeRequest()
+                    .url.encodedPath,
+            )
+
+            vm.dismissInvite()
+            assertNull(vm.invite.value)
+
+            backend.server.close()
+            vm.createInvite()
+            val failed = withTimeout(10_000) { vm.invite.first { it?.error != null } }!!
+            assertEquals(R.string.error_network, failed.error)
         }
 }
