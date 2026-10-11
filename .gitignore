@@ -47,3 +47,4 @@ pgdata/
 
 # Gradle wrapper jar is required to build
 !android/gradle/wrapper/gradle-wrapper.jar
+backups/

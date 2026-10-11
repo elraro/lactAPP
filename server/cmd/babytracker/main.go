@@ -124,6 +124,8 @@ func serve(ctx context.Context, cfg config.Config) error {
 		IdleTimeout:       120 * time.Second,
 	}
 
+	go housekeeping(ctx, pool, logger)
+
 	errc := make(chan error, 1)
 	go func() { errc <- srv.ListenAndServe() }()
 	logger.Info("listening", "addr", cfg.HTTPAddr, "env", cfg.Env)
@@ -137,6 +139,25 @@ func serve(ctx context.Context, cfg config.Config) error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	return srv.Shutdown(shutdownCtx)
+}
+
+// housekeeping prunes expired bookkeeping rows at start-up and once a day.
+func housekeeping(ctx context.Context, pool *pgxpool.Pool, logger *slog.Logger) {
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+	for {
+		pruned, err := store.Prune(ctx, pool, time.Now())
+		if err != nil {
+			logger.Warn("housekeeping failed", "error", err.Error())
+		} else if pruned != (store.Pruned{}) {
+			logger.Info("housekeeping", "mutations", pruned.Mutations, "refresh_tokens", pruned.RefreshTokens, "invites", pruned.Invites)
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+	}
 }
 
 func admin(ctx context.Context, cfg config.Config, args []string) error {
