@@ -23,7 +23,11 @@ No public registration, no social features, no ads, no analytics.
 | 6 | Statistics | done |
 | 7 | Sleep prediction | done |
 | 8 | AI | done |
-| 9 | Polish | next |
+| 9 | Polish | done |
+
+Known gaps and things not yet verified (Docker stack, a real AI provider, release
+signing) are listed in
+[docs/ARCHITECTURE.md §12](docs/ARCHITECTURE.md#12-known-gaps).
 
 ## Documentation
 
@@ -66,7 +70,7 @@ docker compose exec api /babytracker admin create-family \
 ```
 
 This prints a one-time code with which that parent chooses a password in the app.
-The second parent is invited from inside the app. A forgotten password is reset with
+The second parent is invited from inside the app (Settings → Invite the other parent). A forgotten password is reset with
 `admin reset-password -email …`.
 
 ### Optional: AI explanations

@@ -2,7 +2,8 @@
 
 > **Status: APPROVED 2026-10-08.** The server (Phase 2), the Android foundation (Phase 3) and local tracking
 > (Phase 4), synchronization (Phase 5), statistics (Phase 6), the next-sleep
-> estimate (Phase 7) and optional AI explanations (Phase 8) are implemented.
+> estimate (Phase 7), optional AI explanations (Phase 8) and the polish pass (Phase 9)
+> are implemented. §12 lists what is known to be missing or unverified.
 > Section 10 records the decisions that were taken.
 
 ## 1. Guiding principle
@@ -181,8 +182,13 @@ can skip them.
 - Tapping a row opens the editor (time, details, notes, delete). Delete is undoable
   from the snackbar.
 - The first run asks for the baby's name and date of birth.
-- Not built yet: measurement and note entry, editing the baby profile, a baby switcher.
-  Such events arriving from another device are listed but open no dedicated form.
+- *Measurement* (weight, height, head circumference; comma or point decimals) and
+  *Note* are entered from two smaller buttons under the cards and edited like any event.
+- Sleep records that overlap another one — possible only when two phones recorded the
+  same sleep offline — carry a red line asking to correct one of them.
+- Settings holds the baby's profile (name, date of birth, notes), language, sync status,
+  the AI consent switch and the account. Statistics ends with a growth card (latest
+  values, change since the previous weighing, weight bars; no percentiles).
 
 ### Sync triggers
 
@@ -292,7 +298,35 @@ for the record.
 | D11 | Notifications | The spec lists them under localization but defines none. **None in v1.** Candidate later: local-only "nap window opening" reminder. | — |
 | D12 | Realtime between phones | 30 s foreground polling, no FCM. | Server-sent events later if polling feels slow. |
 
-## 11. Out of scope for v1 (model allows adding later)
+## 11. Build variants (Android)
+
+| Variant | Minified | Plain HTTP servers | Use |
+|---|---|---|---|
+| `debug` | no | accepted | development |
+| `staging` | yes (R8) | accepted | checking the shrunk app against a local server; debug-signed, separate application ID suffix `.staging`; never distribute |
+| `release` | yes (R8) | refused: HTTPS only | what you install; needs your own signing key |
+
+## 12. Known gaps
+
+- **Docker**: `docker-compose.yml`, `server/Dockerfile` and `deploy/Caddyfile` have never
+  been run by the author of this code (no Docker on the development machine). The server
+  binary itself is tested and was run directly.
+- **AI with a real model**: the Anthropic and OpenAI-compatible providers are tested
+  against fake upstream servers and, end to end, against a local stand-in. No request
+  has been sent to a real provider.
+- **Release signing**: no signing configuration is committed; `assembleRelease` produces
+  an unsigned APK. The minified code was exercised through the `staging` variant.
+- **One baby in the UI**: the data model, API and sync handle several babies; the app
+  shows the first one and has no switcher or "add another baby".
+- **Overlapping sleep from two phones** is flagged, not merged automatically.
+- **Devices list in the app**: the server can list and revoke devices (`/devices`); the
+  app has no screen for it yet. Changing the password from the app is also not built
+  (`admin reset-password` on the server works).
+- **Next-sleep backtest** (docs/STATISTICS.md §9) is not built.
+- **Instrumented UI tests**: none. Screens were checked by hand on an emulator
+  (API 34), in English and Spanish, light and dark.
+
+## 13. Out of scope for v1 (model allows adding later)
 
 Growth percentiles (needs WHO LMS tables and a `sex` field — the column exists,
 nullable), imperial units, breastfeeding/solids/medication events, data export,

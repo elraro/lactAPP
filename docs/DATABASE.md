@@ -222,8 +222,10 @@ CREATE TABLE ai_analyses (                        -- migration 00002
   has a bug.
 - **Overlapping sleep** is deliberately *not* an exclusion constraint — see
   [SYNC.md](SYNC.md) §7.
-- **Retention.** Nothing is pruned yet. Planned (Phase 9): drop `applied_mutations`
-  rows older than 90 days and used refresh tokens / expired invites older than 30 days.
+- **Retention.** A daily job in the server (`store.Prune`) drops `applied_mutations`
+  rows older than 90 days, and refresh tokens and codes that stopped being usable more
+  than 30 days ago. Family data — events, babies, their tombstones, analyses — is never
+  pruned. Backups: `deploy/backup.sh`.
 
 ## 5. Android (Room) mirror
 

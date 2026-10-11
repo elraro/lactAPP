@@ -10,8 +10,8 @@ app (Kotlin, Compose), a single Go REST server, and PostgreSQL. Parents record
 bottles, diapers, sleep and measurements; the system derives statistics and a
 next-nap estimate; an optional AI explains those results.
 
-**Current phase:** 8 complete (backend; Android sign-in, tracking, sync, statistics,
-next-sleep estimate, optional AI explanations). Next: Phase 9 — polish.
+**Current phase:** all nine phases are complete. What is known to be missing or
+unverified is listed in docs/ARCHITECTURE.md §12 — read it before claiming something works.
 Update this line when a phase completes.
 
 ## 2. Source of truth
@@ -80,6 +80,7 @@ considered · errors handled and surfaced to the user · security implications c
 | Server | `cd server && make check` — gofmt, `go vet`, `staticcheck`, `sqlc diff`, `go test -race`, build |
 | Server, after editing `internal/store/queries/*.sql` or a migration | `make generate` and commit the generated code |
 | Android | `cd android && ./gradlew ktlintCheck detekt lint test assembleDebug` (`ktlintFormat` fixes style). Needs `android/local.properties` with `sdk.dir=…` or `ANDROID_HOME`; the Gradle daemon is pinned to JDK 21 (`gradle/gradle-daemon-jvm.properties`; detekt fails on 25). |
+| Android, minified build against a local server | `./gradlew assembleStaging` → `app/build/outputs/apk/staging/` (accepts `http://10.0.2.2:8080` from the emulator) |
 | Stack | `docker compose up -d` |
 
 Database tests need `BT_TEST_DATABASE_URL` pointing at a PostgreSQL 17 server on which
