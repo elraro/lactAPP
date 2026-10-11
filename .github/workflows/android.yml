@@ -1,0 +1,54 @@
+name: Android build
+
+# Builds the installable APKs and keeps them as workflow artifacts.
+#   staging  minified, debug-signed, accepts plain HTTP — for trying the app out
+#   debug    unminified
+# The release variant is not built here: it has no signing configuration, so its
+# APK cannot be installed (docs/ARCHITECTURE.md §12).
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+  pull_request:
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v7
+
+      # The Gradle daemon is pinned to JDK 21 (gradle/gradle-daemon-jvm.properties).
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Build APKs
+        run: ./gradlew assembleStaging assembleDebug
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: babytracker-apk-${{ github.sha }}
+          path: |
+            android/app/build/outputs/apk/staging/*.apk
+            android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 30
